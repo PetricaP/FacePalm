@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Signup</title>
+</head>
+<body>
+    <form action="/signup" method="POST">
+        Username:
+        <input type="text" name="username">
+        <br>
+        Password:
+        <input type="password" name="password">
+        <br>
+        Retype password:
+        <input type="password" name="re_password">
+        <br>
+        email:
+        <input type="text" name="email">
+        <br>
+        First name:
+        <input type="text" name="first_name">
+        <br>
+        Last name:
+        <input type="text" name="last_name">
+        <br>
+        Birth Date:<br>
+        Day: <input type="number" name="bday" min="1" max="31"><br>
+        Month: <input type="number" name="bmonth" min="1" max="12"><br>
+        Year: <input type="number" name="byear" min="1900" max="2019"><br>
+        <input type="submit" value="Sign Up">
+    </form>
+</body>
+</html>

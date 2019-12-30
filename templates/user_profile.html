@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <title>{{ username }}</title>
+</head>
+<body>
+
+<div class="container">
+    <nav class="navbar navbar-default">
+        <div class="md-form mt-0">
+            <form action="/search" method="get">
+                <input class="form-control" type="text" placeholder="Search" aria-label="Search" name="query">
+                <button type="submit" class="btn btn-info" role="button">Search</button>
+            </form>
+        </div>
+    </nav>
+    <div class="row">
+        <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
+            <img src="{{ profile_photo_path }}">
+        </div>
+        <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
+            <h3>{{ first_name }}</h3>
+            <h3>{{ last_name }}</h3>
+            <h3>{{ birth_date }}</h3>
+            {% if current_user.is_authenticated and current_user.id == username %}
+            <form action="/update_user" enctype="multipart/form-data" method="post">
+                <label for="files" class="btn" style="background:gray;">Choose New Profile Photo</label>
+                <input id="files" type="file" style="display:none;" name="new_profile_photo">
+                <input type="submit" value="Change">
+            </form>
+            {% endif %}
+        </div>
+        <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
+            Description
+        </div>
+    </div>
+    <h2>Posts</h2>
+    {% if current_user.is_authenticated and current_user.id == username %}
+    <button onclick="display_post_box()">Create new Post</button>
+    <br>
+    <div id="post-register" style="display: none">
+        <form action="/create_post" method="POST">
+            <input type="text" name="content">
+            <input type="submit" name="Post">
+            <input type="hidden" name="username" value="{{ username }}">
+        </form>
+    </div>
+    {% endif %}
+    {% for post in posts %}
+    <h4>{{ post.content }}</h4>
+    <h5>{{ post.date_added }} {{ post.time_added }}</h5>
+    {% if current_user.is_authenticated %}
+    <button onclick="display_comment_box({{ post.id }})">New Comment</button>
+    <br>
+    <div class="comment-register" id="comment_post_id_{{ post.id }}" style="display: none">
+        <form action="/create_comment" method="POST">
+            <input type="text" name="content">
+            <input type="submit" name="Post">
+            <input type="hidden" name="username" value="{{ username }}">
+            <input type="hidden" name="post_id" value="{{ post.id }}">
+        </form>
+    </div>
+    {% endif %}
+    {% for comment in post.comments %}
+    <p>{{ comment.content }}<b> <br>{{ comment.user }} {{ comment.date_added }} {{ comment.time_added }}</b></p>
+    {% endfor %}
+    {% endfor %}
+</div>
+<script src="/static/users_own_profile.js"></script>
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+        integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"></script>
+</body>
+</html>
