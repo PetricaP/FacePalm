@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS user_post(
     content VARCHAR(500) NOT NULL,
     user_id INTEGER NOT NULL,
     date_added DATE NOT NULL DEFAULT(CURRENT_DATE),
-    time_added TIME NOT NULL DEFAULT(LOCAL_TIME),
+    time_added TIME NOT NULL DEFAULT(LOCALTIME),
     PRIMARY KEY(id),
     FOREIGN KEY(user_id) REFERENCES "user"(id)
 );
@@ -38,8 +38,49 @@ CREATE TABLE IF NOT EXISTS user_post_comment(
     user_id INTEGER NOT NULL,
     content VARCHAR(500) NOT NULL,
     date_added DATE NOT NULL DEFAULT(CURRENT_DATE),
-    time_added TIME NOT NULL DEFAULT(LOCAL_TIME),
+    time_added TIME NOT NULL DEFAULT(LOCALTIME),
     PRIMARY KEY(id),
     FOREIGN KEY(user_id) REFERENCES "user"(id),
     FOREIGN KEY(post_id) REFERENCES user_post(id)
+);
+
+CREATE TABLE IF NOT EXISTS "group"(
+    id SERIAL,
+    creator INTEGER NOT NULL,
+    date_added DATE NOT NULL DEFAULT(CURRENT_DATE),
+    PRIMARY KEY(id),
+    FOREIGN KEY(creator) REFERENCES "user"(id)
+);
+
+DO $$
+BEGIN
+    IF (SELECT 1 FROM pg_type WHERE typname = 'role') IS null THEN
+        CREATE TYPE role AS ENUM ('ADMIN', 'READER', 'WRITER');
+    END IF;
+END$$;
+
+CREATE TABLE IF NOT EXISTS user_group(
+    user_id INTEGER NOT NULL,
+    group_id INTEGER NOT NULL,
+    role ROLE NOT NULL,
+    date_added DATE NOT NULL DEFAULT(CURRENT_DATE),
+    time_added TIME NOT NULL DEFAULT(LOCALTIME)
+);
+
+CREATE TABLE IF NOT EXISTS group_post(
+    id SERIAL,
+    content VARCHAR(500) NOT NULL,
+    group_id INTEGER NOT NULL,
+    date_added DATE NOT NULL DEFAULT(CURRENT_DATE),
+    time_added TIME NOT NULL DEFAULT(LOCALTIME),
+    PRIMARY KEY(id),
+    FOREIGN KEY(group_id) REFERENCES "group"(id)
+);
+
+CREATE TABLE IF NOT EXISTS group_request(
+    id SERIAL,
+    group_id INTEGER NOT NULL,
+    date_added DATE NOT NULL DEFAULT(CURRENT_DATE),
+    time_added TIME NOT NULL DEFAULT(LOCALTIME),
+    FOREIGN KEY(group_id) REFERENCES "group"(id)
 );

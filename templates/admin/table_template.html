@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Users</title>
+</head>
+<body>
+<h1>{{ info['title'] }}</h1>
+<table style="width:100%">
+    <thead>
+    <tr>
+        {% for key in info['keys'] %}
+        <th>{{ key }}</th>
+        {% endfor %}
+    </tr>
+    </thead>
+    <tbody>
+    {% for entry in info['entries'] %}
+    <tr id="row_{{ entry[0] }}">
+        {% for field in entry %}
+        <th>
+            {% if info['keys'][loop.index - 1] not in info['primary_keys'] %}
+            <input value="{{ field }}" onchange="onChangeEntry(this, '{{ info['keys'][loop.index - 1] }}')">
+            {% else %}
+            {{ field }}
+            {% endif %}
+        </th>
+        {% endfor %}
+        <th>
+            <form action="/delete/{{ table_name }}" method="post">
+                <input type="submit" value="Delete">
+                {% for key in info['keys'] %}
+                <input type="hidden" name="{{ key }}" value="{{ entry[loop.index - 1] }}">
+                {% endfor %}
+            </form>
+        </th>
+        <th>
+            <form class="update" action="/update/{{ table_name }}" method="post">
+                <input class="button" type="submit" value="Update" disabled>
+                {% for key in info['keys'] %}
+                <input type="hidden" name="{{ key }}" value="{{ entry[loop.index - 1] }}">
+                {% endfor %}
+            </form>
+        </th>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<script>
+    function onChangeEntry(entry, field) {
+        entry.style.backgroundColor = 'yellow';
+
+        var input = document.createElement("input")
+        input.name = "__" + field;
+        input.value = entry.value;
+        input.type = "hidden";
+        var form = entry.parentElement.parentElement.getElementsByClassName("update")[0]
+        form.getElementsByClassName("button")[0].disabled = false;
+        form.appendChild(input);
+    }
+
+</script>
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+        integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+        crossorigin="anonymous"></script>
+</body>
+</html>

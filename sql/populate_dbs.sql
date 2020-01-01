@@ -3,6 +3,15 @@ TRUNCATE TABLE user_post_comment RESTART IDENTITY CASCADE;
 TRUNCATE TABLE user_post RESTART IDENTITY CASCADE;
 TRUNCATE TABLE "user" RESTART IDENTITY CASCADE;
 
+INSERT INTO "user"(username, password_hash, email, last_name, first_name, birth_date) VALUES (
+    'admin',
+    '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918',
+    'admin@admin.com',
+    'admin',
+    'admin',
+    DATE(CURRENT_DATE)
+);
+
 INSERT INTO "user"(username, password_hash, email, last_name, first_name, birth_date, profile_photo_path) VALUES (
     'sava.valeria',
     'aa0dcafe4109e988919cd527a080558ce611d781952ffd5049fa3ca6439b56d9',
@@ -48,21 +57,21 @@ INSERT INTO "user"(username, password_hash, email, last_name, first_name, birth_
     '/static/images/girl4.jpg'
 );
 
-INSERT INTO user_friend VALUES (2, 1);
-INSERT INTO user_friend VALUES (2, 5);
-INSERT INTO user_friend VALUES (2, 3);
+INSERT INTO user_friend VALUES (3, 2);
+INSERT INTO user_friend VALUES (3, 6);
+INSERT INTO user_friend VALUES (3, 4);
+INSERT INTO user_friend VALUES (3, 6);
+INSERT INTO user_friend VALUES (6, 4);
 INSERT INTO user_friend VALUES (2, 4);
-INSERT INTO user_friend VALUES (4, 5);
-INSERT INTO user_friend VALUES (1, 3);
 
-INSERT INTO user_post (content, user_id) VALUES ('Bine ati venit pe paagina mea oficiala de facebuci', 2);
-INSERT INTO user_post (content, user_id) VALUES ('Abia astept sa ninga afara, sa facem un om de zapada', 5);
-INSERT INTO user_post (content, user_id) VALUES ('Lucrurile bune se intampla cand te astepti mai putin', 5);
-INSERT INTO user_post (content, user_id) VALUES ('Daruiesc 2 pisici, vaccinati si steriliati', 1);
-INSERT INTO user_post (content, user_id) VALUES ('Cunoaste cineva cum ajung de la telecentru la botanica?', 4);
+INSERT INTO user_post (content, user_id) VALUES ('Bine ati venit pe paagina mea oficiala de facebuci', 3);
+INSERT INTO user_post (content, user_id) VALUES ('Abia astept sa ninga afara, sa facem un om de zapada', 6);
+INSERT INTO user_post (content, user_id) VALUES ('Lucrurile bune se intampla cand te astepti mai putin', 6);
+INSERT INTO user_post (content, user_id) VALUES ('Daruiesc 2 pisici, vaccinati si steriliati', 2);
+INSERT INTO user_post (content, user_id) VALUES ('Cunoaste cineva cum ajung de la telecentru la botanica?', 5);
 
-INSERT INTO user_post_comment (post_id, user_id, content) VALUES (3, 4, 'Deep');
-INSERT INTO user_post_comment (post_id, user_id, content)VALUES (5, 2, 'Troleibus 17');
-INSERT INTO user_post_comment (post_id, user_id, content)VALUES (4, 3, 'Astept poze in privat');
-INSERT INTO user_post_comment (post_id, user_id, content)VALUES (4, 2, 'Vreau si eu unul daca mai sunt disponibii');
-INSERT INTO user_post_comment (post_id, user_id, content)VALUES (2, 4, 'Putem face unul din noroi daca nu mai ai rabdare');
+INSERT INTO user_post_comment (post_id, user_id, content) VALUES (3, 5, 'Deep');
+INSERT INTO user_post_comment (post_id, user_id, content)VALUES (5, 4, 'Troleibus 17');
+INSERT INTO user_post_comment (post_id, user_id, content)VALUES (4, 5, 'Astept poze in privat');
+INSERT INTO user_post_comment (post_id, user_id, content)VALUES (4, 4, 'Vreau si eu unul daca mai sunt disponibii');
+INSERT INTO user_post_comment (post_id, user_id, content)VALUES (2, 5, 'Putem face unul din noroi daca nu mai ai rabdare');

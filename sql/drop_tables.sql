@@ -1,4 +1,8 @@
-DROP TABLE user_friend;
-DROP TABLE user_post_comment;
-DROP TABLE user_post;
-DROP TABLE "user";
+DROP TABLE IF EXISTS group_request;
+DROP TABLE IF EXISTS group_post;
+DROP TABLE IF EXISTS user_group;
+DROP TABLE IF EXISTS "group";
+DROP TABLE IF EXISTS user_friend;
+DROP TABLE IF EXISTS user_post_comment;
+DROP TABLE IF EXISTS user_post;
+DROP TABLE IF EXISTS "user";

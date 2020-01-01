@@ -1,4 +1,5 @@
 import datetime
+import functools
 import hashlib
 import os
 
@@ -22,6 +23,17 @@ def create_tables(connection):
         with connection.cursor() as cursor:
             cursor.execute(script.read())
         connection.commit()
+
+
+def admin_login_required(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        if flask_login.current_user.is_authenticated and flask_login.current_user.id == 'admin':
+            return func(*args, **kwargs)
+        else:
+            flask.abort(404)
+
+    return wrapper
 
 
 def create_app(db_connection):
@@ -268,6 +280,135 @@ def create_app(db_connection):
             db_connection.commit()
 
         return flask.redirect(f'/users/{flask_login.current_user.id}')
+
+    @app.route('/admin')
+    def admin_main_page():
+        return flask.send_from_directory('UI/admin', 'index.html')
+
+    @app.route('/admin/<table_name>')
+    @admin_login_required
+    def admin_table_view(table_name):
+        cursor = db_connection.cursor()
+
+        cursor.execute('SELECT column_name FROM information_schema.COLUMNS WHERE table_name=%s', (table_name,))
+        column_entries = cursor.fetchall()
+        if not column_entries:
+            flask.abort(404)
+
+        cursor.execute(
+            'SELECT a.attname FROM  pg_index i JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY('
+            f'i.indkey) WHERE  i.indrelid = \'"{table_name}"\'::regclass AND i.indisprimary;')
+        primary_keys_entries = cursor.fetchall()
+        primary_keys = [p[0] for p in primary_keys_entries]
+
+        cursor.execute(f'SELECT * FROM "{table_name}"')
+        entries = cursor.fetchall()
+
+        info = {
+            'title': table_name.upper(),
+            'keys': [c[0] for c in column_entries],
+            'primary_keys': primary_keys,
+            'entries': entries
+        }
+
+        return flask.render_template('admin/table_template.html', table_name=table_name, info=info)
+
+    @app.route('/delete/<table_name>', methods=['POST'])
+    def delete(table_name):
+        cursor = db_connection.cursor()
+        cursor.execute(f'SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name=%s)', (table_name, ))
+        entry = cursor.fetchone()
+        if not entry:
+            flask.abort(404)
+
+        cursor.execute(
+            'SELECT a.attname FROM  pg_index i JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY('
+            'i.indkey) WHERE  i.indrelid =%s::regclass AND i.indisprimary;', (table_name, ))
+        primary_keys_entries = cursor.fetchall()
+        primary_keys = [p[0] for p in primary_keys_entries]
+
+        if primary_keys:
+            query = f'DELETE FROM "{table_name}" WHERE '
+            added = 0
+            for primary_key in primary_keys:
+                if primary_key in flask.request.form:
+                    query += f'{" AND " if added != 0 else ""}{primary_key}={flask.request.form[primary_key]}'
+                    added += 1
+            if added == 0:
+                flask.abort(400)
+        else:
+            query = f'DELETE FROM "{table_name}" WHERE '
+            added = 0
+            for key, value in flask.request.form.values():
+                query += f'{" AND " if added != 0 else ""}{key}={value}'
+                added += 1
+
+        try:
+            cursor.execute(query)
+        except Exception as e:
+            print(e)
+            flask.flash(str(e))
+            flask.abort(400)
+
+        db_connection.commit()
+
+        return flask.redirect(flask.request.referrer)
+
+    @app.route('/update/<table_name>', methods=['POST'])
+    def update(table_name):
+        cursor = db_connection.cursor()
+        cursor.execute(f'SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name=%s)', (table_name, ))
+        entry = cursor.fetchone()
+        if not entry:
+            flask.abort(404)
+
+        cursor.execute(
+            'SELECT a.attname FROM  pg_index i JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY('
+            'i.indkey) WHERE  i.indrelid =%s::regclass AND i.indisprimary;', (table_name, ))
+        primary_keys_entries = cursor.fetchall()
+        primary_keys = [p[0] for p in primary_keys_entries]
+
+        form_data = dict(flask.request.form)
+        query = f'UPDATE "{table_name}" SET '
+
+        added = 0
+        keys_to_remove = []
+        for key in form_data:
+            if key.startswith('__'):
+                query += f'{", " if added != 0 else ""}{key[2:]}=\'{form_data[key]}\''
+                keys_to_remove.append(key)
+
+        for key in keys_to_remove:
+            del form_data[key]
+
+        if not keys_to_remove:
+            flask.abort(400)
+
+        query += ' WHERE '
+        if primary_keys:
+            added = 0
+            for primary_key in primary_keys:
+                if primary_key in form_data:
+                    query += f'{" AND " if added != 0 else ""}{primary_key}={form_data[primary_key]}'
+                    added += 1
+            if added == 0:
+                flask.abort(400)
+        else:
+            added = 0
+            for key, value in flask.request.form.values():
+                query += f'{" AND " if added != 0 else ""}{key}={value}'
+                added += 1
+
+        try:
+            cursor.execute(query)
+        except Exception as e:
+            print(e)
+            flask.flash(str(e))
+            flask.abort(400)
+
+        db_connection.commit()
+
+        return flask.redirect(flask.request.referrer)
 
     return app
 
