@@ -304,26 +304,29 @@ def create_app(db_connection):
         cursor.execute(f'SELECT * FROM "{table_name}"')
         entries = cursor.fetchall()
 
+        keys = [c[0] for c in column_entries]
+
         info = {
             'title': table_name.upper(),
-            'keys': [c[0] for c in column_entries],
+            'keys': keys,
             'primary_keys': primary_keys,
             'entries': entries
         }
-
-        return flask.render_template('admin/table_template.html', table_name=table_name, info=info)
+        i = keys.index('id')
+        return flask.render_template('admin/table_template.html', table_name=table_name, info=info,
+                                     new_id=max(map(lambda el: el[i], entries)) + 1 if i != -1 else None)
 
     @app.route('/delete/<table_name>', methods=['POST'])
     def delete(table_name):
         cursor = db_connection.cursor()
-        cursor.execute(f'SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name=%s)', (table_name, ))
+        cursor.execute(f'SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name=%s)', (table_name,))
         entry = cursor.fetchone()
         if not entry:
             flask.abort(404)
 
         cursor.execute(
             'SELECT a.attname FROM  pg_index i JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY('
-            'i.indkey) WHERE  i.indrelid =%s::regclass AND i.indisprimary;', (table_name, ))
+            'i.indkey) WHERE  i.indrelid =%s::regclass AND i.indisprimary;', (table_name,))
         primary_keys_entries = cursor.fetchall()
         primary_keys = [p[0] for p in primary_keys_entries]
 
@@ -357,50 +360,76 @@ def create_app(db_connection):
     @app.route('/update/<table_name>', methods=['POST'])
     def update(table_name):
         cursor = db_connection.cursor()
-        cursor.execute(f'SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name=%s)', (table_name, ))
+        cursor.execute(f'SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name=%s)', (table_name,))
         entry = cursor.fetchone()
         if not entry:
             flask.abort(404)
 
+        cursor.execute('SELECT column_name, data_type FROM information_schema.COLUMNS WHERE table_name=%s',
+                       (table_name,))
+        column_entries = cursor.fetchall()
+        data_types = {c[0]: c[1] for c in column_entries}
+
         cursor.execute(
             'SELECT a.attname FROM  pg_index i JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY('
-            'i.indkey) WHERE  i.indrelid =%s::regclass AND i.indisprimary;', (table_name, ))
+            'i.indkey) WHERE  i.indrelid =%s::regclass AND i.indisprimary;', (table_name,))
         primary_keys_entries = cursor.fetchall()
         primary_keys = [p[0] for p in primary_keys_entries]
 
         form_data = dict(flask.request.form)
         query = f'UPDATE "{table_name}" SET '
 
+        args = []
+
         added = 0
         keys_to_remove = []
         for key in form_data:
             if key.startswith('__'):
-                query += f'{", " if added != 0 else ""}{key[2:]}=\'{form_data[key]}\''
+                query += f'{", " if added != 0 else ""}{key[2:]}=%s'
+                added += 1
                 keys_to_remove.append(key)
 
-        for key in keys_to_remove:
-            del form_data[key]
+                data = form_data[key]
+                data_type = data_types[key[2:]]
+                data = transform_data(data, data_type)
+
+                args.append(data)
 
         if not keys_to_remove:
             flask.abort(400)
+
+        for key in keys_to_remove:
+            del form_data[key]
 
         query += ' WHERE '
         if primary_keys:
             added = 0
             for primary_key in primary_keys:
                 if primary_key in form_data:
-                    query += f'{" AND " if added != 0 else ""}{primary_key}={form_data[primary_key]}'
+                    query += f'{" AND " if added != 0 else ""}{primary_key}=%s'
                     added += 1
+
+                    data = form_data[primary_key]
+                    data_type = data_types[primary_key]
+                    data = transform_data(data, data_type)
+
+                    args.append(data)
             if added == 0:
                 flask.abort(400)
         else:
             added = 0
             for key, value in flask.request.form.values():
-                query += f'{" AND " if added != 0 else ""}{key}={value}'
+                query += f'{" AND " if added != 0 else ""}{key}=%s'
                 added += 1
 
+                data = value
+                data_type = data_types[key]
+                data = transform_data(data, data_type)
+
+                args.append(data)
+
         try:
-            cursor.execute(query)
+            cursor.execute(query, tuple(args))
         except Exception as e:
             print(e)
             flask.flash(str(e))
@@ -409,6 +438,55 @@ def create_app(db_connection):
         db_connection.commit()
 
         return flask.redirect(flask.request.referrer)
+
+    @app.route('/insert/<table_name>', methods=['POST'])
+    def insert(table_name):
+        cursor = db_connection.cursor()
+        cursor.execute(f'SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name=%s)', (table_name,))
+        entry = cursor.fetchone()
+        if not entry:
+            flask.abort(404)
+
+        cursor.execute('SELECT column_name, data_type FROM information_schema.COLUMNS WHERE table_name=%s',
+                       (table_name,))
+        column_entries = cursor.fetchall()
+        data_types = {c[0]: c[1] for c in column_entries}
+
+        form_data = dict(flask.request.form)
+        query = f'INSERT INTO "{table_name}"('
+
+        args = []
+
+        added = 0
+        for key, value in form_data.items():
+            query += f'{", " if added != 0 else ""}{key}'
+            added += 1
+
+            data = value
+            data_type = data_types[key]
+            data = transform_data(data, data_type)
+
+            args.append(data)
+
+        query += ') VALUES(' + '%s, ' * (added - 1) + '%s)'
+
+        try:
+            cursor.execute(query, tuple(args))
+        except Exception as e:
+            print(e)
+            flask.flash(str(e))
+            flask.abort(400)
+
+        db_connection.commit()
+
+        return flask.redirect(flask.request.referrer)
+
+    def transform_data(data, data_type):
+        if data_type == 'integer':
+            data = int(data)
+        elif data_type == 'date':
+            data = datetime.datetime.strptime(data, '%Y-%m-%d') if data != 'None' else None
+        return data
 
     return app
 

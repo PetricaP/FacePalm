@@ -9,7 +9,7 @@ INSERT INTO "user"(username, password_hash, email, last_name, first_name, birth_
     'admin@admin.com',
     'admin',
     'admin',
-    DATE(CURRENT_DATE)
+    CURRENT_DATE
 );
 
 INSERT INTO "user"(username, password_hash, email, last_name, first_name, birth_date, profile_photo_path) VALUES (

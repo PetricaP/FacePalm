@@ -46,6 +46,19 @@
     {% endfor %}
     </tbody>
 </table>
+<button>Add new</button>
+<div id="new_entry_div">
+    <form action="/insert/{{ table_name }}" method="post">
+        {% for key in info['keys'] %}
+        {% if key == 'id' %}
+        id: {{ new_id }}<br>
+        {% else %}
+        {{ key }}: <input name="{{ key }}" value="{{ info['entries'][-1][loop.index - 1] }}"><br>
+        {% endif %}
+        {% endfor %}
+        <input type="submit" value="Insert">
+    </form>
+</div>
 <script>
     function onChangeEntry(entry, field) {
         entry.style.backgroundColor = 'yellow';
