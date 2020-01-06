@@ -1,80 +1,101 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Users</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="/static/flash_error.css">
+
+    <title>{{ info['title'] }}</title>
+
+    <style>
+        .container {
+            margin: 20px;
+        }
+
+        input {
+            size: 10;
+        }
+
+        table {
+            table-layout: fixed;
+        }
+
+        th {
+            width: 150px;
+        }
+
+    </style>
 </head>
 <body>
-<h1>{{ info['title'] }}</h1>
-<table style="width:100%">
-    <thead>
-    <tr>
-        {% for key in info['keys'] %}
-        <th>{{ key }}</th>
+<div class="container">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="container" id="error-container">
+        {% for message in messages %}
+        <div class="error-message">{{ message }}</div>
         {% endfor %}
-    </tr>
-    </thead>
-    <tbody>
-    {% for entry in info['entries'] %}
-    <tr id="row_{{ entry[0] }}">
-        {% for field in entry %}
-        <th>
-            {% if info['keys'][loop.index - 1] not in info['primary_keys'] %}
-            <input value="{{ field }}" onchange="onChangeEntry(this, '{{ info['keys'][loop.index - 1] }}')">
-            {% else %}
-            {{ field }}
-            {% endif %}
-        </th>
-        {% endfor %}
-        <th>
-            <form action="/delete/{{ table_name }}" method="post">
-                <input type="submit" value="Delete">
+    </div>
+    {% endif %}
+    {% endwith %}
+    <h1 class="display-4">{{ info['title'] }}</h1>
+    <div id="table">
+        <table class="table table-striped table-hover">
+            <thead class="thead-dark">
+            <tr>
                 {% for key in info['keys'] %}
-                <input type="hidden" name="{{ key }}" value="{{ entry[loop.index - 1] }}">
+                <th class="text-center">{{ key }}</th>
                 {% endfor %}
-            </form>
-        </th>
-        <th>
-            <form class="update" action="/update/{{ table_name }}" method="post">
-                <input class="button" type="submit" value="Update" disabled>
-                {% for key in info['keys'] %}
-                <input type="hidden" name="{{ key }}" value="{{ entry[loop.index - 1] }}">
+                <th></th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for entry in info['entries'] %}
+            <tr id="row_{{ entry[0] }}">
+                {% for field in entry %}
+                <th>
+                    {% if info['keys'][loop.index - 1] != 'id' %}
+                    <input class="form-control" name="{{ info['keys'][loop.index - 1] }}" value="{{ field }}"
+                           onchange="onChangeEntry(this, '{{ info['keys'][loop.index - 1] }}')">
+                    {% else %}
+                    <input class="form-control" name="{{ info['keys'][loop.index - 1] }}" value="{{ field }}" disabled>
+                    {% endif %}
+                </th>
                 {% endfor %}
-            </form>
-        </th>
-    </tr>
-    {% endfor %}
-    </tbody>
-</table>
-<button>Add new</button>
-<div id="new_entry_div">
-    <form action="/insert/{{ table_name }}" method="post">
-        {% for key in info['keys'] %}
-        {% if key == 'id' %}
-        id: {{ new_id }}<br>
-        {% else %}
-        {{ key }}: <input name="{{ key }}" value="{{ info['entries'][-1][loop.index - 1] }}"><br>
-        {% endif %}
-        {% endfor %}
-        <input type="submit" value="Insert">
-    </form>
+                <th>
+                    <form class="delete" action="/delete/{{ table_name }}" method="post">
+                        <input type="submit" value="Delete" class="btn btn-danger">
+                        {% for key in info['keys'] %}
+                        <input type="hidden" name="{{ key }}" value="{{ entry[loop.index - 1] }}">
+                        {% endfor %}
+                    </form>
+                </th>
+                <th>
+                    <form class="update" action="/update/{{ table_name }}" method="post">
+                        <input class="button btn btn-warning" type="submit" value="Update" disabled>
+                        {% for key in info['keys'] %}
+                        <input type="hidden" name="{{ key }}" value="{{ entry[loop.index - 1] }}">
+                        {% endfor %}
+                    </form>
+                </th>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <span class="table-add float-left mb-3 mr-2"><a href="#!" class="btn btn-success"
+                                                        onclick="onAddEntry({{ info['keys'] }}, '{{table_name}}');">New Entry</a></span>
+    </div>
 </div>
-<script>
-    function onChangeEntry(entry, field) {
-        entry.style.backgroundColor = 'yellow';
 
-        var input = document.createElement("input")
-        input.name = "__" + field;
-        input.value = entry.value;
-        input.type = "hidden";
-        var form = entry.parentElement.parentElement.getElementsByClassName("update")[0]
-        form.getElementsByClassName("button")[0].disabled = false;
-        form.appendChild(input);
-    }
-
-</script>
 <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
         integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
         crossorigin="anonymous"></script>
+<script src="/static/table_template.js">
+</script>
 </body>
 </html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="/static/flash_error.css">
+
+    <title>Search</title>
+    <style>
+        .result-entry {
+            padding: 20px;
+            margin: 20px;
+            background-color: #b2cbd4;
+            border-radius: 10px;
+        }
+
+        body {
+            background-color: #e0ebef;
+        }
+
+        .user-text {
+            font-size: 30px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    {% for user in results %}
+    <div class="row result-entry">
+        <div class="col-lg-2">
+            <a href="/users/{{ user.username }}">
+                <img src="{{ user.profile_photo_path }}" style="width:100px;height:100;display:inline">
+            </a>
+        </div>
+        <div class="col-lg-2">
+            <h1 class="display-4 user-text">{{ user.username }}</h1>
+            {{ user.first_name }} {{ user.last_name }}<br>
+            <em>{{ user.email }}</em>
+        </div>
+    </div>
+</div>
+<br>
+{% endfor %}
+</body>
+</html>

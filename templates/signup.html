@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="/static/flash_error.css">
+
+    <title>Signup</title>
+
+    <style>
+    body {
+        background-color: #e0ebef;
+    }
+
+    #main-content {
+        width: 30%;
+        background-color: #b2cbd4;
+        margin: 20px;
+        padding: 20px;
+        border-radius: 10px;
+    }
+    </style>
+</head>
+<body>
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+<div class="container" id="error-container">
+    {% for message in messages %}
+    <div class="error-message">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+<div class="container" id="main-content">
+    <form action="/signup" method="POST">
+        <div class="form-group mx-sm-3 mb-2">
+            <label for="username">Username</label>
+            <input class="form-control" type="text" name="username" id="username">
+        </div>
+        <br>
+        <div class="form-group mx-sm-3 mb-2">
+            <label for="password">Password</label>
+            <input class="form-control" type="password" name="password" id="password">
+        </div>
+        <br>
+        <div class="form-group mx-sm-3 mb-2">
+            <label for="re_password">Retype password</label>
+            <input class="form-control" type="password" name="re_password" id="re_password">
+        </div>
+        <br>
+        <div class="form-group mx-sm-3 mb-2">
+            <label for="email">email</label>
+            <input class="form-control" type="text" name="email" id="email">
+        </div>
+        <br>
+        <div class="form-group mx-sm-3 mb-2">
+            <label for="first_name">First Name</label>
+            <input class="form-control" type="text" name="first_name" id="first_name">
+        </div>
+        <br>
+        <div class="form-group mx-sm-3 mb-2">
+            <label for="last_name">Last Name</label>
+            <input class="form-control" type="text" name="last_name" id="last_name">
+        </div>
+        <br>
+        <label>Birth Date</label><br>
+        <div class="form-group mx-sm-3 mb-2">
+            <label for="bday">Day</label>
+            <input class="form-control" type="number" name="bday" id="bday" min="1" max="31">
+        </div>
+        <br>
+        <div class="form-group mx-sm-3 mb-2">
+            <label for="bmonth">Month</label>
+            <input class="form-control" type="number" name="bmonth" id="bmonth" min="1" max="12">
+        </div>
+        <br>
+        <div class="form-group mx-sm-3 mb-2">
+            <label for="byear">Year</label>
+            <input class="form-control" type="number" name="byear" id="byear" min="1990" max="2010">
+        </div>
+        <br>
+        <input type="submit" value="Sign Up" class="btn btn-primary">
+    </form>
+</div>
+</body>
+</html>

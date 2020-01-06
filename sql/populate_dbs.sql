@@ -64,6 +64,10 @@ INSERT INTO user_friend VALUES (3, 6);
 INSERT INTO user_friend VALUES (6, 4);
 INSERT INTO user_friend VALUES (2, 4);
 
+INSERT INTO user_friend_request VALUES (5, 2);
+INSERT INTO user_friend_request VALUES (5, 3);
+INSERT INTO user_friend_request VALUES (5, 4);
+
 INSERT INTO user_post (content, user_id) VALUES ('Bine ati venit pe paagina mea oficiala de facebuci', 3);
 INSERT INTO user_post (content, user_id) VALUES ('Abia astept sa ninga afara, sa facem un om de zapada', 6);
 INSERT INTO user_post (content, user_id) VALUES ('Lucrurile bune se intampla cand te astepti mai putin', 6);
@@ -71,7 +75,19 @@ INSERT INTO user_post (content, user_id) VALUES ('Daruiesc 2 pisici, vaccinati s
 INSERT INTO user_post (content, user_id) VALUES ('Cunoaste cineva cum ajung de la telecentru la botanica?', 5);
 
 INSERT INTO user_post_comment (post_id, user_id, content) VALUES (3, 5, 'Deep');
-INSERT INTO user_post_comment (post_id, user_id, content)VALUES (5, 4, 'Troleibus 17');
-INSERT INTO user_post_comment (post_id, user_id, content)VALUES (4, 5, 'Astept poze in privat');
-INSERT INTO user_post_comment (post_id, user_id, content)VALUES (4, 4, 'Vreau si eu unul daca mai sunt disponibii');
-INSERT INTO user_post_comment (post_id, user_id, content)VALUES (2, 5, 'Putem face unul din noroi daca nu mai ai rabdare');
+INSERT INTO user_post_comment (post_id, user_id, content) VALUES (5, 4, 'Troleibus 17');
+INSERT INTO user_post_comment (post_id, user_id, content) VALUES (4, 5, 'Astept poze in privat');
+INSERT INTO user_post_comment (post_id, user_id, content) VALUES (4, 4, 'Vreau si eu unul daca mai sunt disponibii');
+INSERT INTO user_post_comment (post_id, user_id, content) VALUES (2, 5, 'Putem face unul din noroi daca nu mai ai rabdare');
+
+INSERT INTO "group"(creator_id, name) VALUES (2, 'Pisici de pretutindeni');
+INSERT INTO "group"(creator_id, name) VALUES (4, 'Iasi-Bucuresti Bucuresti-Iasi');
+
+INSERT INTO user_group VALUES(2, 1, 'ADMIN');
+INSERT INTO user_group VALUES(4, 2, 'ADMIN');
+INSERT INTO user_group VALUES(3, 1, 'READER');
+INSERT INTO user_group VALUES(4, 1, 'READER');
+INSERT INTO user_group VALUES(2, 2, 'WRITER');
+
+INSERT INTO group_post(content, group_id, user_id) VALUES('Am gasit azi o pisica in Copou, neagra ochii verzi, o cauta cineva?', 1, 2);
+INSERT INTO group_post(content, group_id, user_id) VALUES('Bine ati venit in "Pisici de pretutindeni"', 1, 2);

@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS "user"(
     birth_date DATE NOT NULL,
     date_joined DATE NOT NULL DEFAULT(CURRENT_DATE),
     PRIMARY KEY(id),
-    UNIQUE (username)
+    UNIQUE (username),
+    UNIQUE (email)
 );
 
 CREATE TABLE IF NOT EXISTS user_friend(
@@ -20,6 +21,15 @@ CREATE TABLE IF NOT EXISTS user_friend(
     FOREIGN KEY(user1_id) REFERENCES "user"(id),
     FOREIGN KEY(user2_id) REFERENCES "user"(id),
     CHECK (user1_id != user2_id)
+);
+
+CREATE TABLE IF NOT EXISTS user_friend_request(
+    friend_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    date_added DATE NOT NULL DEFAULT(CURRENT_DATE),
+    FOREIGN KEY(friend_id) REFERENCES "user"(id),
+    FOREIGN KEY(user_id) REFERENCES "user"(id),
+    CHECK (friend_id != user_id)
 );
 
 CREATE TABLE IF NOT EXISTS user_post(
@@ -46,10 +56,11 @@ CREATE TABLE IF NOT EXISTS user_post_comment(
 
 CREATE TABLE IF NOT EXISTS "group"(
     id SERIAL,
-    creator INTEGER NOT NULL,
+    creator_id INTEGER NOT NULL,
+    name VARCHAR(50) NOT NULL,
     date_added DATE NOT NULL DEFAULT(CURRENT_DATE),
     PRIMARY KEY(id),
-    FOREIGN KEY(creator) REFERENCES "user"(id)
+    FOREIGN KEY(creator_id) REFERENCES "user"(id)
 );
 
 DO $$
@@ -71,16 +82,19 @@ CREATE TABLE IF NOT EXISTS group_post(
     id SERIAL,
     content VARCHAR(500) NOT NULL,
     group_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
     date_added DATE NOT NULL DEFAULT(CURRENT_DATE),
     time_added TIME NOT NULL DEFAULT(LOCALTIME),
     PRIMARY KEY(id),
-    FOREIGN KEY(group_id) REFERENCES "group"(id)
+    FOREIGN KEY(group_id) REFERENCES "group"(id),
+    FOREIGN KEY(user_id) REFERENCES "user"(id)
 );
 
 CREATE TABLE IF NOT EXISTS group_request(
-    id SERIAL,
+    user_id INTEGER NOT NULL,
     group_id INTEGER NOT NULL,
     date_added DATE NOT NULL DEFAULT(CURRENT_DATE),
     time_added TIME NOT NULL DEFAULT(LOCALTIME),
+    FOREIGN KEY(user_id) REFERENCES "user"(id),
     FOREIGN KEY(group_id) REFERENCES "group"(id)
 );

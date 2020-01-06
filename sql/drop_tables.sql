@@ -2,6 +2,7 @@ DROP TABLE IF EXISTS group_request;
 DROP TABLE IF EXISTS group_post;
 DROP TABLE IF EXISTS user_group;
 DROP TABLE IF EXISTS "group";
+DROP TABLE IF EXISTS user_friend_request;
 DROP TABLE IF EXISTS user_friend;
 DROP TABLE IF EXISTS user_post_comment;
 DROP TABLE IF EXISTS user_post;
