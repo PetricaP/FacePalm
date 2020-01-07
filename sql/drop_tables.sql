@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS group_post_comment;
+DROP TABLE IF EXISTS group_invitation;
 DROP TABLE IF EXISTS group_request;
 DROP TABLE IF EXISTS group_post;
 DROP TABLE IF EXISTS user_group;

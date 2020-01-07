@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
           integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <link rel="stylesheet" href="/static/flash_error.css">
+    <link rel="stylesheet" href="/static/generic.css">
+
 
     <title>Search</title>
     <style>
@@ -19,17 +21,50 @@
             border-radius: 10px;
         }
 
-        body {
-            background-color: #e0ebef;
-        }
-
         .user-text {
             font-size: 30px;
         }
+
     </style>
 </head>
 <body>
 <div class="container">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="container" id="error-container">
+        {% for message in messages %}
+        <div class="error-message">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <nav class="navbar navbar-default" id="my-navbar">
+        {% if current_user.id != username %}
+        <a href="/users/{{ current_user.id }}" class="btn btn-info" role="button">Home</a>
+        {% endif %}
+        <div class="md-form mt-0">
+            <form class="form-inline" action="/search" method="get">
+                <div class="form-group mb-2">
+                    <select class="custom-select" name="attribute">
+                        <option value="first_name">First Name</option>
+                        <option value="last_name">Last Name</option>
+                        <option value="username">username</option>
+                        <option value="email">email</option>
+                    </select>
+                </div>
+                <div class="form-group mx-sm-3 mb-2">
+                    <label for="inputPassword2" class="sr-only">Search</label>
+                    <input class="form-control" type="text" name="query" id="inputPassword2" placeholder="Search">
+                </div>
+                <button type="submit" class="btn btn-primary mb-2">Search</button>
+            </form>
+        </div>
+
+        <form action="/logout">
+            <input type="submit" class="btn btn-danger" value="Log Out"/>
+        </form>
+    </nav>
     {% for user in results %}
     <div class="row result-entry">
         <div class="col-lg-2">
@@ -43,8 +78,8 @@
             <em>{{ user.email }}</em>
         </div>
     </div>
+    {% endfor %}
 </div>
 <br>
-{% endfor %}
 </body>
 </html>

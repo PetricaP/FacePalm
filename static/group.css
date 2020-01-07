@@ -1,0 +1,15 @@
+#members-area {
+    background-color: #b2cbd4;
+    border-radius: 5px;
+    padding: 10px;
+    margin: 10px;
+}
+
+.member-area {
+    border-radius: 5px;
+    margin: 5px;
+    padding: 5px;
+    margin-top: 10px;
+    background-color: #e0ebef;
+}
+

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="/static/flash_error.css">
+    <link rel="stylesheet" href="/static/generic.css">
+
+    <title>Add users in groups</title>
+</head>
+<body>
+<div class="container">
+    <h2 class="big-heading">My Friends</h2>
+    {% for friend in friends %}
+    <div class="friend-request row justify-content-center">
+        <div class="friend-request-top">
+            <div style="display:inline;">
+                <img src="{{ friend.profile_photo_path }}" style="width:50px;height:50;">
+            </div>
+            <div style="display:inline; white-space:nowrap;">
+                <b>{{ friend.first_name }} {{ friend.last_name }}</b>
+            </div>
+            <form method="post">
+                <input type="submit" value="Invite" class="btn btn-info default-spacer">
+                <input type="hidden" name="group_id" value="{{ group_id }}">
+                <input type="hidden" name="guest_id" value="{{ friend.id }}">
+                <input type="hidden" name="group_name" value="{{ group_name }}">
+                <input type="radio" name="role" value="READER" checked="checked">Reader<br>
+                {% if user_role in ['WRITER', 'ADMIN'] %}
+                <input type="radio" name="role" value="WRITER">Writer<br>
+                {% endif %}
+                {% if user_role == 'ADMIN' %}
+                <input type="radio" name="role" value="ADMIN">Admin
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+</body>
+</html>

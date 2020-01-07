@@ -1,50 +1,26 @@
-body {
-    background-color: #e0ebef;
-}
-
-#posts-area {
-    background-color: #b2cbd4;
-    margin-top: 10px;
-    border-radius: 5px;
-    padding: 10px;
-}
-
-.big-heading {
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
-    background-color: #548292;
-    margin-top: -10px;
-    margin-left: -10px;
-    margin-right: -10px;
-    padding: 10px;
-}
-
-.post-div {
-    background-color: #e0ebef;
-    margin: 10px;
-    padding: 10px;
-    border-radius: 5px;
-}
-
 .friend-request {
-    background-color: #e0ebef;
+    background-color: #b2cbd4;
     margin: 10px;
     padding: 10px;
     border-radius: 5px;
 }
 
 .friend-request-top {
-    padding: 10px;
+    font-size: 12px;
 }
 
 .default-spacer {
     margin-right: 20px;
 }
 
-#friend-requests-div {
-    background-color: #b2cbd4;
+.half-side-view {
+    padding: 5px;
+}
+
+.side-area {
+    background-color: #548292;
     border-radius: 5px;
-    padding: 10px;
+    padding-bottom: 3px;
 }
 
 #my-navbar {
@@ -52,29 +28,26 @@ body {
     margin-bottom: 10px;
 }
 
-.post-content {
+.small-heading {
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    background-color: #548292;
+    font-size: 20px;
     padding: 10px;
-    font-size: 25px;
 }
 
-.post-time {
-    text-align: right;
-    font-size: 15px;
+.request-button {
+    font-size: 12px;
 }
 
-.comment-content {
-    padding: 5px;
-    font-size: 17px;
+#full-side-view {
+    border: 2px;
+    border-style: solid;
+    border-color: #548292;
+    padding-top: 10px;
+    background-color: #b2cbd4;
 }
 
-.post-content-div {
-    padding: 20px;
-    font-size: 25px;
-}
-
-.comment-div {
-    border-radius: 5px;
-    background-color: #fbfdfe;
-    padding: 10px;
-    margin: 10px;
+#main-content {
+    padding-right: 30px;
 }

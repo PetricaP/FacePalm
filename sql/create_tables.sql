@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS user_friend(
     date_added DATE NOT NULL DEFAULT(CURRENT_DATE),
     FOREIGN KEY(user1_id) REFERENCES "user"(id),
     FOREIGN KEY(user2_id) REFERENCES "user"(id),
+    UNIQUE (user1_id, user2_id),
     CHECK (user1_id != user2_id)
 );
 
@@ -29,6 +30,7 @@ CREATE TABLE IF NOT EXISTS user_friend_request(
     date_added DATE NOT NULL DEFAULT(CURRENT_DATE),
     FOREIGN KEY(friend_id) REFERENCES "user"(id),
     FOREIGN KEY(user_id) REFERENCES "user"(id),
+    UNIQUE (user_id, friend_id),
     CHECK (friend_id != user_id)
 );
 
@@ -60,7 +62,8 @@ CREATE TABLE IF NOT EXISTS "group"(
     name VARCHAR(50) NOT NULL,
     date_added DATE NOT NULL DEFAULT(CURRENT_DATE),
     PRIMARY KEY(id),
-    FOREIGN KEY(creator_id) REFERENCES "user"(id)
+    FOREIGN KEY(creator_id) REFERENCES "user"(id),
+    UNIQUE(name)
 );
 
 DO $$
@@ -75,7 +78,10 @@ CREATE TABLE IF NOT EXISTS user_group(
     group_id INTEGER NOT NULL,
     role ROLE NOT NULL,
     date_added DATE NOT NULL DEFAULT(CURRENT_DATE),
-    time_added TIME NOT NULL DEFAULT(LOCALTIME)
+    time_added TIME NOT NULL DEFAULT(LOCALTIME),
+    FOREIGN KEY(user_id) REFERENCES "user"(id),
+    FOREIGN KEY(group_id) REFERENCES "group"(id),
+    UNIQUE(user_id, group_id)
 );
 
 CREATE TABLE IF NOT EXISTS group_post(
@@ -90,11 +96,28 @@ CREATE TABLE IF NOT EXISTS group_post(
     FOREIGN KEY(user_id) REFERENCES "user"(id)
 );
 
-CREATE TABLE IF NOT EXISTS group_request(
+CREATE TABLE IF NOT EXISTS group_post_comment(
+    id SERIAL,
+    content VARCHAR(500) NOT NULL,
+    post_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
-    group_id INTEGER NOT NULL,
     date_added DATE NOT NULL DEFAULT(CURRENT_DATE),
     time_added TIME NOT NULL DEFAULT(LOCALTIME),
-    FOREIGN KEY(user_id) REFERENCES "user"(id),
-    FOREIGN KEY(group_id) REFERENCES "group"(id)
+    PRIMARY KEY(id),
+    FOREIGN KEY(post_id) REFERENCES group_post(id),
+    FOREIGN KEY(user_id) REFERENCES "user"(id)
+);
+
+CREATE TABLE IF NOT EXISTS group_invitation(
+    guest_id INTEGER NOT NULL,
+    host_id INTEGER NOT NULL,
+    group_id INTEGER NOT NULL,
+    role ROLE NOT NULL,
+    date_added DATE NOT NULL DEFAULT(CURRENT_DATE),
+    time_added TIME NOT NULL DEFAULT(LOCALTIME),
+    FOREIGN KEY(guest_id) REFERENCES "user"(id),
+    FOREIGN KEY(host_id) REFERENCES "user"(id),
+    FOREIGN KEY(group_id) REFERENCES "group"(id),
+    UNIQUE(host_id, guest_id, group_id),
+    CHECK (host_id != guest_id)
 );

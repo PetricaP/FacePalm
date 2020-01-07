@@ -9,9 +9,11 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
           integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <link rel="stylesheet" href="/static/flash_error.css">
+    <link rel="stylesheet" href="/static/generic.css">
+    <link rel="stylesheet" href="/static/user_profile.css">
+    <link rel="stylesheet" href="/static/posts.css">
 
     <title>{{ username }}</title>
-    <link rel="stylesheet" href="/static/user_profile.css">
 </head>
 <body>
 
@@ -54,9 +56,9 @@
     </nav>
     <div class="container-fluid">
         <div class="row">
-            <div class="col-lg-9" id="main-content">
+            <div class="col-lg-7" id="main-content">
                 <div class="row">
-                    <div class="col-lg-5 col-md-5 col-sm-6 col-xs-12">
+                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
                         <img src="{{ profile_photo_path }}">
                     </div>
                     <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
@@ -70,6 +72,7 @@
                             <input class="btn btn-info" type="submit" value="Change">
                         </form>
                         {% else %}
+                        {% if is_friend < 3 %}
                         <form action="/add_friend" method="post">
                             {% if is_friend == 1 %}
                             <input value="Friend" class="btn btn-primary" disabled>
@@ -82,6 +85,12 @@
                             {% endif %}
                             {% endif %}
                         </form>
+                        {% else %}
+                        <form action="/resolve_friend_request" method="post">
+                            <input name="user_id" value="{{ user_id }}" type="hidden">
+                            <input type="submit" name="accept" value="Accept" class="btn btn-info default-spacer">
+                        </form>
+                        {% endif %}
                         {% endif %}
                     </div>
                 </div>
@@ -91,27 +100,29 @@
                     <button onclick="display_post_box()" class="btn-lg btn-info">New Post</button>
                     <div id="post-register" style="display: none">
                         <form action="/create_post" method="POST">
-                            <input type="text" name="content">
-                            <input type="submit" name="Post">
+                            <input type="text" name="content" class="form-control">
+                            <input type="submit" name="Post" class="btn btn-success">
                             <input type="hidden" name="username" value="{{ username }}">
                         </form>
                     </div>
                     {% endif %}
                     {% for post in posts %}
-                    <div class="post-div">
+                    <div class="post-div container">
                         <div class="post-content-div">
                             <div class="post-content">{{ post.content }}</div>
                             <div class="post-time"><b>{{ post.date_added }} {{ post.time_added }}</b></div>
                         </div>
                         {% for comment in post.comments %}
-                        <div class="comment-div">
-                            <div class="comment-content">{{ comment.content }}</div>
+                        <div class="comment-div row">
+                            <div class="comment-content col-lg-8">{{ comment.content }}</div>
                             <div class="post-time">
-                                <img src="{{ comment.user_profile_photo }}" style="width:50px;height:50px;display:inline">
-                                {{ comment.user }}
+                                <a href="/users/{{comment.username }}">
+                                    <img src="{{ comment.user_profile_photo }}"
+                                         style="width:30px;height:30px;display:inline">
+                                </a>
+                                {{ comment.user }}<br>
+                                <b>{{ comment.date_added }} {{ comment.time_added }}</b>
                             </div>
-                            <div class="post-time">
-                                <b>{{ comment.date_added }} {{ comment.time_added }}</b></div>
                         </div>
                         {% endfor %}
                         {% if current_user.is_authenticated %}
@@ -122,7 +133,6 @@
                             <form action="/create_comment" method="POST">
                                 <input type="text" name="content" class="form-control">
                                 <input type="submit" value="Post" class="btn-sm btn-info">
-                                <input type="hidden" name="username" value="{{ username }}">
                                 <input type="hidden" name="post_id" value="{{ post.id }}">
                             </form>
                         </div>
@@ -131,27 +141,100 @@
                     {% endfor %}
                 </div>
             </div>
-            <div class="col-lg-3" id="friend-requests-div">
-                <h2 class="big-heading">Friend Requests</h2>
-                {% if friend_requests %}
-                {% for request in friend_requests %}
-                <div class="friend-request row justify-content-center">
-                    <div class="friend-request-top">
-                        <div id="image" style="display:inline;">
-                            <img src="{{ request.profile_photo_path }}" style="width:50px;height:50;">
+            <div id="full-side-view" class="col-lg-5 row">
+                <div class="col-lg-6 half-side-view">
+                    <div class="side-area">
+                        <h2 class="small-heading">My Friends</h2>
+                        {% for friend in my_friends %}
+                        <div class="friend-request row justify-content-center">
+                            <div class="friend-request-top">
+                                <div style="display:inline;">
+                                    <a href="/users/{{ friend.username }}">
+                                        <img src="{{ friend.profile_photo_path }}" style="width:40px;height:40px;">
+                                    </a>
+                                </div>
+                                <div style="display:inline; white-space:nowrap;">
+                                    <b>{{ friend.first_name }} {{ friend.last_name }}</b>
+                                </div>
+                            </div>
                         </div>
-                        <div id="texts" style="display:inline; white-space:nowrap;">
-                            <b>{{ request.first_name }} {{ request.last_name }}</b>
-                        </div>
+                        {% endfor %}
                     </div>
-                    <form action="/resolve_friend_request" method="post">
-                        <input name="user_id" value="{{ request.id }}" type="hidden">
-                        <input type="submit" name="accept" value="Accept" class="btn btn-info default-spacer">
-                        <input type="submit" name="reject" value="Reject" class="btn btn-warning">
-                    </form>
+                    {% if friend_requests %}
+                    <div class="side-area" style="margin-top: 10px;">
+                        <h2 class="small-heading">Friend Requests</h2>
+                        {% for request in friend_requests %}
+                        <div class="friend-request row justify-content-center">
+                            <div class="friend-request-top">
+                                <div style="display:inline;">
+                                    <a href="/users/{{ request.username }}">
+                                        <img src="{{ request.profile_photo_path }}" style="width:40px;height:40;">
+                                    </a>
+                                </div>
+                                <div style="display:inline; white-space:nowrap;">
+                                    <b>{{ request.first_name }} {{ request.last_name }}</b>
+                                </div>
+                            </div>
+                            <form action="/resolve_friend_request" method="post">
+                                <input name="user_id" value="{{ request.id }}" type="hidden">
+                                <div class="row" style="margin-top: 10px">
+                                    <input type="submit" name="accept" value="Accept"
+                                           class="request-button btn btn-info default-spacer">
+                                    <input type="submit" name="reject" value="Reject"
+                                           class="request-button btn btn-warning">
+                                </div>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
-                {% endfor %}
-                {% endif %}
+                <div class="col-lg-6 half-side-view">
+                    <div class="side-area">
+                        <h2 class="small-heading">My Groups</h2>
+                        {% for group in my_groups %}
+                        <div class="friend-request row justify-content-center">
+                            <div class="friend-request-top">
+                                <a href="/groups/{{ group.name }}">
+                                    <div style="display:inline; white-space:nowrap;">
+                                        <b>{{ group.name }}</b>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if group_invitations %}
+                    <div class="side-area" style="margin-top: 10px;">
+                        <h2 class="small-heading">Group Invitations</h2>
+                        {% for invitation in group_invitations %}
+                        <div class="friend-request row justify-content-center">
+                            <div class="friend-request-top">
+                                <div style="display:inline;">
+                                    <a href="/users/{{ invitation.username }}">
+                                        <img src="{{ invitation.profile_photo_path }}" style="width:40px;height:40;">
+                                    </a>
+                                </div>
+                                <div style="display:inline; white-space:nowrap;">
+                                    <b>{{ invitation.first_name }} {{ invitation.last_name }}</b>
+                                </div>
+                            </div>
+                            <b>{{ invitation.group_name }}</b>
+                            <form action="/resolve_group_invitation" method="post">
+                                <input name="host_id" value="{{ invitation.host_id }}" type="hidden">
+                                <input name="group_id" value="{{ invitation.group_id }}" type="hidden">
+                                <div class="row" style="margin-top: 10px">
+                                    <input type="submit" name="accept" value="Accept"
+                                           class="request-button btn btn-info default-spacer">
+                                    <input type="submit" name="reject" value="Reject"
+                                           class="request-button btn btn-warning">
+                                </div>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>

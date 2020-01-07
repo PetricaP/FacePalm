@@ -6,44 +6,142 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
-    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="/static/flash_error.css">
+    <link rel="stylesheet" href="/static/posts.css">
+    <link rel="stylesheet" href="/static/generic.css">
+    <link rel="stylesheet" href="/static/group.css">
 
     <title>{{ group_name }}</title>
 </head>
 <body>
 <div class="container">
-    <nav class="navbar navbar-default">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="container" id="error-container">
+        {% for message in messages %}
+        <div class="error-message">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <nav class="navbar navbar-default" id="my-navbar">
         {% if current_user.id != username %}
-        <a href="/users/{{ current_user.id }}">Home</a>
+        <a href="/users/{{ current_user.id }}" class="btn btn-info" role="button">Home</a>
         {% endif %}
         <div class="md-form mt-0">
-            <form action="/search" method="get">
-                <select name="attribute">
-                    <option value="first_name">First Name</option>
-                    <option value="last_name">Last Name</option>
-                    <option value="username">username</option>
-                    <option value="email">email</option>
-                </select>
-                <input class="form-control" type="text" placeholder="Search" aria-label="Search" name="query">
-                <button type="submit" class="btn btn-info" role="button">Search</button>
+            <form class="form-inline" action="/search" method="get">
+                <div class="form-group mb-2">
+                    <select class="custom-select" name="attribute">
+                        <option value="first_name">First Name</option>
+                        <option value="last_name">Last Name</option>
+                        <option value="username">username</option>
+                        <option value="email">email</option>
+                    </select>
+                </div>
+                <div class="form-group mx-sm-3 mb-2">
+                    <label for="inputPassword2" class="sr-only">Search</label>
+                    <input class="form-control" type="text" name="query" id="inputPassword2" placeholder="Search">
+                </div>
+                <button type="submit" class="btn btn-primary mb-2">Search</button>
             </form>
         </div>
 
         <form action="/logout">
-            <input type="submit" value="Log Out"/>
+            <input type="submit" class="btn btn-danger" value="Log Out"/>
         </form>
     </nav>
-    <h1>{{ group_name }}</h1>
+    <div class="row">
+        <h1 class="display-4">{{ group.name }} ({{ user_role[0] }})</h1>
+    </div>
+    <div class="row">
+        <div class="col-lg-9" id="posts-area">
+            <h1 class="display-4 big-heading">Posts</h1>
+            {% if user_role in ['ADMIN', 'WRITER'] %}
+            <button onclick="display_post_box()" class="btn-lg btn-info">New Post</button>
+            <div id="post-register" style="display: none">
+                <form action="/create_post" method="POST">
+                    <input type="text" name="content" class="form-control">
+                    <input type="submit" name="Post" class="btn btn-success">
+                    <input type="hidden" name="group_id" value="{{ group.id }}">
+                </form>
+            </div>
+            {% endif %}
+            {% for post in posts %}
+            <div class="post-div container">
+                <div class="post-content-div">
+                    <div class="post-content">{{ post.content }}</div>
+                    <div class="post-time">
+                        <a href="/users/{{ post.username }}">
+                            <img src="{{ post.user_profile_photo }}"
+                                 style="width:70px;height:70px;display:inline">
+                        </a>
+                        {{ post.user_first_name }} {{ post.user_last_name }}<br>
+                        <b>{{ post.date_added }} {{ post.time_added }}</b>
+                    </div>
+                </div>
+                {% for comment in post.comments %}
+                <div class="comment-div row">
+                    <div class="comment-content col-lg-8">{{ comment.content }}</div>
+                    <div class="post-time col-lg-3">
+                        <a href="/users/{{comment.username }}">
+                            <img src="{{ comment.user_profile_photo }}"
+                                 style="width:50px;height:50px;display:inline">
+                        </a>
+                        {{ comment.user }}<br>
+                        <b>{{ comment.date_added }} {{ comment.time_added }}</b>
+                    </div>
+                </div>
+                {% endfor %}
+                {% if user_role in ['ADMIN', 'WRITER'] %}
+                <button class="btn-sm btn-info" onclick="display_comment_box({{ post.id }})">
+                    New Comment
+                </button>
+                <div class="comment-register" id="comment_post_id_{{ post.id }}" style="display: none">
+                    <form action="/create_comment" method="POST">
+                        <input type="text" name="content" class="form-control">
+                        <input type="submit" value="Post" class="btn-sm btn-info">
+                        <input type="hidden" name="username" value="{{ current_user.id }}">
+                        <input type="hidden" name="post_id" value="{{ post.id }}">
+                        <input type="hidden" name="location" value="group">
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        <div class="col-lg-3 ">
+            <div class="container" id="members-area">
+                <h2 class="big-heading">Group Members</h2>
+                {% for member in members %}
+                <div class="member-area row">
+                    <div class="col-lg-3">
+                        <a href="/users/{{ member.username }}">
+                            <img src="{{ member.profile_photo_path }}" style="width:50px;height:50;">
+                        </a>
+                    </div>
+                    <div class="col-lg-6 member-name">
+                        {{ member.first_name }} {{ member.last_name }}
+                    </div>
+                </div>
+                {% endfor %}
+                <div class="container">
+                    <form action="/add_group_user" style="margin-top: 15px;" method="get">
+                        <input type="submit" class="btn btn-success" value="Add new member">
+                        <input type="hidden" name="group_id" value="{{ group.id }}">
+                        <input type="hidden" name="user_role" value="{{ user_role }}">
+                        <input type="hidden" name="group_name" value="{{ group.name }}">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
         integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
         crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
-        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
-        crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
-        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
-        crossorigin="anonymous"></script>
+<script src="/static/user_profile.js"></script>
 </body>
 </html>

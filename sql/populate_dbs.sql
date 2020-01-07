@@ -1,3 +1,8 @@
+TRUNCATE TABLE group_post_comment RESTART IDENTITY CASCADE;
+TRUNCATE TABLE group_post RESTART IDENTITY CASCADE;
+TRUNCATE TABLE user_group RESTART IDENTITY CASCADE;
+TRUNCATE TABLE "group" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE user_friend_request RESTART IDENTITY CASCADE;
 TRUNCATE TABLE user_friend RESTART IDENTITY CASCADE;
 TRUNCATE TABLE user_post_comment RESTART IDENTITY CASCADE;
 TRUNCATE TABLE user_post RESTART IDENTITY CASCADE;
@@ -60,12 +65,11 @@ INSERT INTO "user"(username, password_hash, email, last_name, first_name, birth_
 INSERT INTO user_friend VALUES (3, 2);
 INSERT INTO user_friend VALUES (3, 6);
 INSERT INTO user_friend VALUES (3, 4);
-INSERT INTO user_friend VALUES (3, 6);
+INSERT INTO user_friend VALUES (3, 5);
 INSERT INTO user_friend VALUES (6, 4);
 INSERT INTO user_friend VALUES (2, 4);
 
 INSERT INTO user_friend_request VALUES (5, 2);
-INSERT INTO user_friend_request VALUES (5, 3);
 INSERT INTO user_friend_request VALUES (5, 4);
 
 INSERT INTO user_post (content, user_id) VALUES ('Bine ati venit pe paagina mea oficiala de facebuci', 3);
@@ -82,12 +86,26 @@ INSERT INTO user_post_comment (post_id, user_id, content) VALUES (2, 5, 'Putem f
 
 INSERT INTO "group"(creator_id, name) VALUES (2, 'Pisici de pretutindeni');
 INSERT INTO "group"(creator_id, name) VALUES (4, 'Iasi-Bucuresti Bucuresti-Iasi');
+INSERT INTO "group"(creator_id, name) VALUES (4, 'Hai la pacanele');
+INSERT INTO "group"(creator_id, name) VALUES (5, 'Petrecere de anul nou');
+INSERT INTO "group"(creator_id, name) VALUES (5, 'Meme-uri si din alea');
 
-INSERT INTO user_group VALUES(2, 1, 'ADMIN');
+INSERT INTO user_group(user_id, group_id, role) VALUES(2, 1, 'ADMIN');
+
+INSERT INTO user_group VALUES(5, 4, 'ADMIN');
 INSERT INTO user_group VALUES(4, 2, 'ADMIN');
+INSERT INTO user_group VALUES(4, 3, 'ADMIN');
+
+INSERT INTO user_group VALUES(5, 1, 'READER');
+INSERT INTO user_group VALUES(4, 4, 'READER');
 INSERT INTO user_group VALUES(3, 1, 'READER');
-INSERT INTO user_group VALUES(4, 1, 'READER');
+
+INSERT INTO user_group VALUES(6, 2, 'WRITER');
 INSERT INTO user_group VALUES(2, 2, 'WRITER');
+INSERT INTO user_group VALUES(2, 3, 'WRITER');
 
 INSERT INTO group_post(content, group_id, user_id) VALUES('Am gasit azi o pisica in Copou, neagra ochii verzi, o cauta cineva?', 1, 2);
 INSERT INTO group_post(content, group_id, user_id) VALUES('Bine ati venit in "Pisici de pretutindeni"', 1, 2);
+
+INSERT INTO group_invitation(guest_id, host_id, group_id, role) VALUES(2, 6, 2, 'READER');
+INSERT INTO group_invitation(guest_id, host_Id, group_id, role) VALUES(5, 4, 2, 'WRITER');
