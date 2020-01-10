@@ -64,6 +64,7 @@
                 <form action="/create_post" method="POST">
                     <input type="text" name="content" class="form-control">
                     <input type="submit" name="Post" class="btn btn-success">
+                    <input type="hidden" name="username" value="{{ current_user.id }}">
                     <input type="hidden" name="group_id" value="{{ group.id }}">
                 </form>
             </div>

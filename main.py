@@ -332,7 +332,7 @@ def create_app(db_connection):
             'WHERE '
             '  g.id = i.group_id '
             '  AND i.host_id=u.id'
-            '  AND i.guest_id=%s', (user_id, ))
+            '  AND i.guest_id=%s', (user_id,))
         entries = cursor.fetchall()
 
         return [{
@@ -432,7 +432,7 @@ def create_app(db_connection):
 
         with db_connection:
             with db_connection.cursor() as cursor:
-                cursor.execute('SELECT id FROM "user" WHERE username=%s', (flask_login.current_user.id, ))
+                cursor.execute('SELECT id FROM "user" WHERE username=%s', (flask_login.current_user.id,))
                 guest_id = cursor.fetchone()[0]
 
                 cursor.execute('SELECT role FROM group_invitation WHERE host_id=%s AND guest_id=%s AND group_id=%s',
@@ -679,7 +679,7 @@ def create_app(db_connection):
                                        '    role'
                                        ') VALUES(%s, %s, %s, %s)',
                                        (guest_id, user_id, group_id, role))
-                    except (psycopg2.DatabaseError, ValueError) as e:
+                    except (psycopg2.DatabaseError, ValueError):
                         flask.flash('Invalid input')
                         return flask.redirect(flask.request.referrer)
 
@@ -1052,12 +1052,17 @@ def create_app(db_connection):
 
                         data = form_data[key]
                         data_type = data_types[key[2:]]
-                        data = transform_data(data, data_type)
+                        try:
+                            data = transform_data(data, data_type)
+                        except ValueError:
+                            flask.flash('Invalid data')
+                            return flask.redirect(flask.request.referrer)
 
                         args.append(data)
 
                 if not keys_to_remove:
-                    flask.abort(400)
+                    flask.flash('Invalid request')
+                    flask.redirect(flask.request.referrer)
 
                 for key in keys_to_remove:
                     del form_data[key]
@@ -1085,16 +1090,18 @@ def create_app(db_connection):
 
                         data = value
                         data_type = data_types[key]
-                        data = transform_data(data, data_type)
+                        try:
+                            data = transform_data(data, data_type)
+                        except ValueError:
+                            flask.flash('Invalid data')
+                            return flask.redirect(flask.request.referrer)
 
                         args.append(data)
 
                 try:
                     cursor.execute(query, tuple(args))
-                except Exception as e:
-                    print(e)
+                except psycopg2.DatabaseError as e:
                     flask.flash(str(e))
-                    flask.abort(400)
 
         return flask.redirect(flask.request.referrer)
 
