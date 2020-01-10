@@ -1144,7 +1144,7 @@ def create_app(db_connection):
 
 
 def main():
-    db_connection = psycopg2.connect(host='localhost', database='bdp', user='postgres', password='password')
+    db_connection = psycopg2.connect(host='localhost', database='bdp', user='postgres', password='p@ssw0rd')
     create_tables(db_connection)
 
     app = create_app(db_connection)
