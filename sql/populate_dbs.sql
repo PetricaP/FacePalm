@@ -93,7 +93,7 @@ INSERT INTO "group"(creator_id, name) VALUES (5, 'Meme-uri si din alea');
 INSERT INTO user_group(user_id, group_id, role) VALUES(2, 1, 'ADMIN');
 
 INSERT INTO user_group VALUES(5, 4, 'ADMIN');
-INSERT INTO user_group VALUES(4, 2, 'ADMIN');
+INSERT INTO user_group VALUES(3, 2, 'ADMIN');
 INSERT INTO user_group VALUES(4, 3, 'ADMIN');
 
 INSERT INTO user_group VALUES(5, 1, 'READER');
@@ -108,4 +108,4 @@ INSERT INTO group_post(content, group_id, user_id) VALUES('Am gasit azi o pisica
 INSERT INTO group_post(content, group_id, user_id) VALUES('Bine ati venit in "Pisici de pretutindeni"', 1, 2);
 
 INSERT INTO group_invitation(guest_id, host_id, group_id, role) VALUES(2, 6, 2, 'READER');
-INSERT INTO group_invitation(guest_id, host_Id, group_id, role) VALUES(5, 4, 2, 'WRITER');
+INSERT INTO group_invitation(guest_id, host_id, group_id, role) VALUES(5, 3, 2, 'WRITER');
