@@ -12,6 +12,17 @@
     <link rel="stylesheet" href="/static/generic.css">
 
     <title>Add users in groups</title>
+
+    <style>
+        .radios {
+            padding: 10px;
+        }
+        .radio-inline {
+            padding: 30px;
+        }
+
+
+    </style>
 </head>
 <body>
 <div class="container">
@@ -20,7 +31,7 @@
     <div class="friend-request row justify-content-center">
         <div class="friend-request-top">
             <div style="display:inline;">
-                <img src="{{ friend.profile_photo_path }}" style="width:50px;height:50;">
+                <img src="{{ friend.profile_photo_path }}" style="margin:10px;width:50px;height:50;">
             </div>
             <div style="display:inline; white-space:nowrap;">
                 <b>{{ friend.first_name }} {{ friend.last_name }}</b>
@@ -30,13 +41,16 @@
                 <input type="hidden" name="group_id" value="{{ group_id }}">
                 <input type="hidden" name="guest_id" value="{{ friend.id }}">
                 <input type="hidden" name="group_name" value="{{ group_name }}">
-                <input type="radio" name="role" value="READER" checked="checked">Reader<br>
-                {% if user_role in ['WRITER', 'ADMIN'] %}
-                <input type="radio" name="role" value="WRITER">Writer<br>
-                {% endif %}
-                {% if user_role == 'ADMIN' %}
-                <input type="radio" name="role" value="ADMIN">Admin
-                {% endif %}
+                <br>
+                <div class="radios">
+                    <input type="radio" class="radio-inline" name="role" value="READER" checked="checked">Reader
+                    {% if user_role in ['WRITER', 'ADMIN'] %}
+                    <input type="radio" class="radio-inline" name="role" value="WRITER">Writer
+                    {% endif %}
+                    {% if user_role == 'ADMIN' %}
+                    <input type="radio" class="radio-inline" name="role" value="ADMIN">Admin
+                    {% endif %}
+                </div>
             </form>
         </div>
     </div>

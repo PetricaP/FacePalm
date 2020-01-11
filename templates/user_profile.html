@@ -61,15 +61,15 @@
                     <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
                         <img src="{{ profile_photo_path }}">
                     </div>
-                    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                        <h3>{{ first_name }}</h3>
-                        <h3>{{ last_name }}</h3>
-                        <h3>{{ birth_date }}</h3>
+                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                        <h4>{{ first_name }}</h4>
+                        <h4>{{ last_name }}</h4>
+                        <h4>{{ birth_date }}</h4>
                         {% if current_user.is_authenticated and current_user.id == username %}
                         <form action="/update_user" enctype="multipart/form-data" method="post">
-                            <label for="files" class="btn btn-outline-info">choose new profile photo</label>
+                            <label for="files" class="btn-sm btn-outline-info">Choose new profile photo</label>
                             <input id="files" type="file" style="display:none;" name="new_profile_photo">
-                            <input class="btn btn-info" type="submit" value="Change">
+                            <input class="btn-sm btn-success" type="submit" value="Change">
                         </form>
                         {% else %}
                         {% if is_friend < 3 %}
@@ -92,6 +92,19 @@
                         </form>
                         {% endif %}
                         {% endif %}
+                        <div id="description">
+                            <b>Description</b><br>
+                            <div id="description-content" style="word-wrap: break-word;">
+                            {% if description %}
+                                {{ description }}
+                            {% endif %}
+                            </div>
+                            {% if current_user.id == username %}
+                            <button class="btn-xs btn-link" onclick="changeEditableDescription()" id="edit-button"
+                                    style="margin-top:10px">Edit
+                            </button>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
                 <div class="container-fluid" id="posts-area">

@@ -125,6 +125,15 @@
                     <div class="col-lg-6 member-name">
                         {{ member.first_name }} {{ member.last_name }}
                     </div>
+                    {% if (user_role == 'ADMIN' and member.role != 'ADMIN') or (member.username == current_user.id) %}
+                    <div class=col-lg-3">
+                        <form action="/remove_group_user" method="post">
+                            <input type="submit" value="-" class="btn-sm btn-danger" style="margin-top: 10px;">
+                            <input type="hidden" name="username" value="{{ member.username }}">
+                            <input type="hidden" name="group_id" value="{{ group.id }}">
+                        </form>
+                    </div>
+                    {% endif %}
                 </div>
                 {% endfor %}
                 <div class="container">

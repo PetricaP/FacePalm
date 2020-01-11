@@ -14,6 +14,12 @@ CREATE TABLE IF NOT EXISTS "user"(
     UNIQUE (email)
 );
 
+CREATE TABLE IF NOT EXISTS user_description(
+    user_id INTEGER NOT NULL,
+    content VARCHAR(100),
+    FOREIGN KEY(user_id) REFERENCES "user"(id)
+);
+
 CREATE TABLE IF NOT EXISTS user_friend(
     user1_id INTEGER NOT NULL,
     user2_id INTEGER NOT NULL,

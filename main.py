@@ -149,6 +149,13 @@ def create_app(db_connection):
 
             user_id, first_name, last_name, birth_date, profile_photo_path = entry
 
+            cursor.execute('SELECT content FROM user_description WHERE user_id=%s', (user_id,))
+            entry = cursor.fetchone()
+            if entry:
+                description = entry[0]
+            else:
+                description = None
+
             formatted_date = format_date(birth_date)
             if profile_photo_path is None:
                 profile_photo_path = '/static/images/anonim.jpg'
@@ -228,6 +235,7 @@ def create_app(db_connection):
                                      last_name=last_name,
                                      profile_photo_path=profile_photo_path,
                                      birth_date=formatted_date,
+                                     description=description,
                                      posts=posts,
                                      friend_requests=friend_requests,
                                      my_groups=my_groups,
@@ -685,6 +693,38 @@ def create_app(db_connection):
 
             return flask.redirect(f'/groups/{group_name}')
 
+    @app.route('/remove_group_user', methods=['POST'])
+    @flask_login.login_required
+    def remove_group_user():
+        username = flask.request.form['username']
+
+        try:
+            group_id = int(flask.request.form['group_id'])
+        except ValueError:
+            flask.flash('Invalid group id')
+            return flask.redirect(flask.request.referrer)
+
+        with db_connection:
+            with db_connection.cursor() as cursor:
+                cursor.execute('SELECT id FROM "user" WHERE username=%s', (username, ))
+
+                entry = cursor.fetchone()
+                if not entry:
+                    flask.flash('Invalid username')
+                    return flask.redirect(flask.request.referrer)
+
+                user_id = entry[0]
+
+                try:
+                    cursor.execute('DELETE FROM "user_group" WHERE user_id=%s AND group_id=%s', (user_id, group_id))
+                except psycopg2.DatabaseError:
+                    flask.flash('Invalid user id or group id supplied')
+
+        if username == flask_login.current_user.id:
+            return flask.redirect(f'/users/{username}')
+        else:
+            return flask.redirect(flask.request.referrer)
+
     @app.route("/logout")
     @flask_login.login_required
     def logout():
@@ -696,7 +736,7 @@ def create_app(db_connection):
     def create_post():
         username = flask.request.form['username']
         content = flask.request.form['content']
-        group_id = flask.request.form['group_id']
+        group_id = flask.request.form['group_id'] if 'group_id' in flask.request.form else None
 
         if not content:
             flask.flash('Post cannot contain empty body.')
@@ -802,8 +842,28 @@ def create_app(db_connection):
                     server_path = '/' + local_path
                     cursor.execute('UPDATE "user" SET profile_photo_path=%s WHERE username=%s',
                                    (server_path, flask_login.current_user.id))
+        if 'description' in flask.request.form:
+            description = flask.request.form['description']
+            if len(description) > 100:
+                flask.flash('Description can\'t be longer than 100 characters')
+                flask.redirect(flask.request.referrer)
+            with db_connection:
+                with db_connection.cursor() as cursor:
+                    cursor.execute('SELECT id FROM "user" WHERE username=%s', (flask_login.current_user.id,))
+                    user_id = cursor.fetchone()[0]
 
-        return flask.redirect(f'/users/{flask_login.current_user.id}')
+                    cursor.execute('SELECT * FROM user_description WHERE user_id=%s', (user_id,))
+                    try:
+                        if cursor.fetchone():
+                            cursor.execute('UPDATE user_description SET content=%s WHERE user_id=%s',
+                                           (description, user_id))
+                        else:
+                            cursor.execute('INSERT INTO user_description VALUES(%s, %s)', (user_id, description))
+                    except psycopg2.DatabaseError:
+                        flask.flash('Invalid description')
+                        flask.redirect(flask.request.referrer)
+
+        return flask.redirect(flask.request.referrer)
 
     @app.route('/groups/<group_name>')
     @flask_login.login_required
@@ -899,7 +959,8 @@ def create_app(db_connection):
                 '  username, '
                 '  first_name, '
                 '  last_name, '
-                '  profile_photo_path '
+                '  profile_photo_path, '
+                '  role '
                 'FROM '
                 '  "user" u, '
                 '  user_group ug '
@@ -910,12 +971,13 @@ def create_app(db_connection):
             entries = cursor.fetchall()
 
         members = []
-        for username, first_name, last_name, profile_photo_path in entries:
+        for username, first_name, last_name, profile_photo_path, role in entries:
             members.append({
                 'username': username,
                 'first_name': first_name,
                 'last_name': last_name,
-                'profile_photo_path': profile_photo_path or '/static/images/anonim.jpg'
+                'profile_photo_path': profile_photo_path or '/static/images/anonim.jpg',
+                'role': role
             })
 
         group = {

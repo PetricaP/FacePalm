@@ -8,4 +8,5 @@ DROP TABLE IF EXISTS user_friend_request;
 DROP TABLE IF EXISTS user_friend;
 DROP TABLE IF EXISTS user_post_comment;
 DROP TABLE IF EXISTS user_post;
+DROP TABLE IF EXISTS user_description;
 DROP TABLE IF EXISTS "user";
