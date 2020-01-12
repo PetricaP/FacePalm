@@ -39,3 +39,37 @@ function changeEditableDescription() {
 
     description_content_div.appendChild(form);
 }
+
+
+function onCreateGroup(username) {
+    div = document.getElementById("new-group-div");
+
+    button = document.getElementById("create-group-button");
+    button.parentNode.removeChild(button);
+
+    form = document.createElement("form");
+    form.setAttribute("action", "/add_new_group");
+    form.setAttribute("method", "post");
+
+    input = document.createElement("input");
+    input.setAttribute("type", "text");
+    input.setAttribute("name", "group_name");
+    input.setAttribute("class", "form-control");
+
+    form.appendChild(input);
+
+    sub = document.createElement("input");
+    sub.setAttribute("type", "submit");
+    sub.setAttribute("class", "btn btn-success");
+
+    form.appendChild(sub);
+
+    hid = document.createElement("input");
+    hid.setAttribute("type", "hidden");
+    hid.setAttribute("name", "username");
+    hid.setAttribute("value", username);
+
+    form.appendChild(hid);
+
+    div.appendChild(form);
+}

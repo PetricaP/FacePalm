@@ -95,9 +95,9 @@
                         <div id="description">
                             <b>Description</b><br>
                             <div id="description-content" style="word-wrap: break-word;">
-                            {% if description %}
+                                {% if description %}
                                 {{ description }}
-                            {% endif %}
+                                {% endif %}
                             </div>
                             {% if current_user.id == username %}
                             <button class="btn-xs btn-link" onclick="changeEditableDescription()" id="edit-button"
@@ -160,14 +160,21 @@
                         <h2 class="small-heading">My Friends</h2>
                         {% for friend in my_friends %}
                         <div class="friend-request row justify-content-center">
-                            <div class="friend-request-top">
-                                <div style="display:inline;">
+                            <div class="friend-request-top row">
+                                <div style="display:inline;" class="col-lg-3">
                                     <a href="/users/{{ friend.username }}">
                                         <img src="{{ friend.profile_photo_path }}" style="width:40px;height:40px;">
                                     </a>
                                 </div>
-                                <div style="display:inline; white-space:nowrap;">
+                                <div style="display:inline; white-space:nowrap;" class="col-lg-5">
                                     <b>{{ friend.first_name }} {{ friend.last_name }}</b>
+                                </div>
+                                <div class="col-lg-3">
+                                    <form action="/remove_user_friend" method="post">
+                                        <input type="submit" value="X" class="btn-sm btn-danger"
+                                               style="margin-top: 10px;">
+                                        <input type="hidden" name="friend_id" value="{{ friend.id }}">
+                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -216,6 +223,11 @@
                             </div>
                         </div>
                         {% endfor %}
+                        <div id="new-group-div" style="margin-left: 30px;margin-bottom: 10px;">
+                            <button class="btn btn-success" onclick="onCreateGroup('{{ current_user.id }}')"
+                                    id="create-group-button">Create group
+                            </button>
+                        </div>
                     </div>
                     {% if group_invitations %}
                     <div class="side-area" style="margin-top: 10px;">

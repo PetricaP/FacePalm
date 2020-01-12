@@ -101,7 +101,7 @@ def validate_form_data():
         error_flag = True
 
     bday = flask.request.form['bday']
-    if not bday or not bday.isnum() or int(bday) < 1 or int(bday) > 31:
+    if not bday or not bday.isnumeric() or int(bday) < 1 or int(bday) > 31:
         flask.flash('Invalid birth date')
         error_flag = True
 
@@ -706,7 +706,7 @@ def create_app(db_connection):
 
         with db_connection:
             with db_connection.cursor() as cursor:
-                cursor.execute('SELECT id FROM "user" WHERE username=%s', (username, ))
+                cursor.execute('SELECT id FROM "user" WHERE username=%s', (username,))
 
                 entry = cursor.fetchone()
                 if not entry:
@@ -724,6 +724,19 @@ def create_app(db_connection):
             return flask.redirect(f'/users/{username}')
         else:
             return flask.redirect(flask.request.referrer)
+
+    @app.route('/remove_user_friend', methods=['POST'])
+    def remove_user_friend():
+        friend_id = int(flask.request.form['friend_id'])
+
+        with db_connection:
+            with db_connection.cursor() as cursor:
+                cursor.execute('SELECT id FROM "user" WHERE username=%s', (flask_login.current_user.id,))
+                user_id = cursor.fetchone()[0]
+                cursor.execute(
+                    'DELETE FROM "user_friend" WHERE (user1_id=%s AND user2_id=%s) OR (user1_id=%s AND user2_id=%s)',
+                    (user_id, friend_id, friend_id, user_id))
+        return flask.redirect(flask.request.referrer)
 
     @app.route("/logout")
     @flask_login.login_required
@@ -779,6 +792,8 @@ def create_app(db_connection):
         if not content:
             flask.flash('Content of the comment cannot be empty')
             return flask.redirect(flask.request.referrer)
+
+        content = content.strip()
 
         with db_connection:
             with db_connection.cursor() as cursor:
@@ -1206,6 +1221,34 @@ def create_app(db_connection):
                 return flask.redirect(flask.request.referrer)
 
             conn.commit()
+
+        return flask.redirect(flask.request.referrer)
+
+    @app.route("/add_new_group", methods=["POST"])
+    def add_new_group():
+        username = flask.request.form["username"]
+        group_name = flask.request.form["group_name"]
+
+        if not group_name or any([c in group_name for c in '!@#$%&*(),./;[]>?<:"{}|\\\'~`']):
+            flask.flash('Invalid group name')
+            flask.redirect(flask.request.referrer)
+
+        group_name = group_name.strip()
+
+        with db_connection:
+            with db_connection.cursor() as cursor:
+                try:
+                    cursor.execute('SELECT id FROM "user" WHERE username=%s', (username,))
+                    user_id = cursor.fetchone()[0]
+
+                    cursor.execute('INSERT INTO "group"(creator_id, name) VALUES(%s, %s)', (user_id, group_name))
+
+                    cursor.execute('SELECT id FROM "group" WHERE creator_id=%s AND name=%s', (user_id, group_name))
+                    group_id = cursor.fetchone()[0]
+
+                    cursor.execute('INSERT INTO user_group VALUES(%s, %s, %s)', (user_id, group_id, 'ADMIN'))
+                except psycopg2.DatabaseError:
+                    flask.flash('Invalid group name')
 
         return flask.redirect(flask.request.referrer)
 
