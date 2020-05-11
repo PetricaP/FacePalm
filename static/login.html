@@ -26,15 +26,6 @@
     </style>
 </head>
 <body>
-{% with messages = get_flashed_messages() %}
-{% if messages %}
-<div class="container" id="error-container">
-    {% for message in messages %}
-    <div class="error-message">{{ message }}</div>
-    {% endfor %}
-</div>
-{% endif %}
-{% endwith %}
 <div class="container" id="login-form">
     <form action="/login" method="POST">
         <div class="form-group mx-sm-3 mb-2">

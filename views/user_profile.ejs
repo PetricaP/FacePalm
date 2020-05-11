@@ -8,30 +8,20 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
           integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-    <link rel="stylesheet" href="/static/flash_error.css">
-    <link rel="stylesheet" href="/static/generic.css">
-    <link rel="stylesheet" href="/static/user_profile.css">
-    <link rel="stylesheet" href="/static/posts.css">
+    <link rel="stylesheet" href="/flash_error.css">
+    <link rel="stylesheet" href="/generic.css">
+    <link rel="stylesheet" href="/user_profile.css">
+    <link rel="stylesheet" href="/posts.css">
 
-    <title>{{ username }}</title>
+    <title><%= username %></title>
 </head>
 <body>
 
 <div class="container">
-    {% with messages = get_flashed_messages() %}
-    {% if messages %}
-    <div class="container" id="error-container">
-        {% for message in messages %}
-        <div class="error-message">{{ message }}</div>
-        {% endfor %}
-    </div>
-    {% endif %}
-    {% endwith %}
-
     <nav class="navbar navbar-default" id="my-navbar">
-        {% if current_user.id != username %}
-        <a href="/users/{{ current_user.id }}" class="btn btn-info" role="button">Home</a>
-        {% endif %}
+        <% if (logged_username != username) { %>
+        <a href="/users/<%= logged_username %>" class="btn btn-info" role="button">Home</a>
+        <% } %>
         <div class="md-form mt-0">
             <form class="form-inline" action="/search" method="get">
                 <div class="form-group mb-2">
@@ -59,144 +49,146 @@
             <div class="col-lg-7" id="main-content">
                 <div class="row">
                     <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
-                        <img src="{{ profile_photo_path }}">
+                        <img src="<%= profile_photo_path %>">
                     </div>
                     <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
-                        <h4>{{ first_name }}</h4>
-                        <h4>{{ last_name }}</h4>
-                        <h4>{{ birth_date }}</h4>
-                        {% if current_user.is_authenticated and current_user.id == username %}
+                        <h4><%= first_name %></h4>
+                        <h4><%= last_name %></h4>
+                        <h4><%= birth_date %></h4>
+                        <% if (logged_username == username) { %>
                         <form action="/update_user" enctype="multipart/form-data" method="post">
                             <label for="files" class="btn-sm btn-outline-info">Choose new profile photo</label>
                             <input id="files" type="file" style="display:none;" name="new_profile_photo">
                             <input class="btn-sm btn-success" type="submit" value="Change">
                         </form>
                         {% else %}
-                        {% if is_friend < 3 %}
+                        <% if (is_friend < 3) { %>
                         <form action="/add_friend" method="post">
-                            {% if is_friend == 1 %}
+                            <% if (is_friend == 1) { %>
                             <input value="Friend" class="btn btn-primary" disabled>
                             {% else %}
-                            {% if is_friend == 0 %}
-                            <input type="hidden" name="username" value="{{ username }}">
+                            <% if (is_friend == 0) { %>
+                            <input type="hidden" name="username" value="<%= username %>">
                             <input type="submit" class="btn btn-primary" value="Add friend">
                             {% else %}
                             <input value="Request Sent" class="btn btn-primary" disabled>
-                            {% endif %}
-                            {% endif %}
+                            <% } %>
+                            <% } %>
                         </form>
                         {% else %}
                         <form action="/resolve_friend_request" method="post">
-                            <input name="user_id" value="{{ user_id }}" type="hidden">
+                            <input name="user_id" value="<%= user_id %>" type="hidden">
                             <input type="submit" name="accept" value="Accept" class="btn btn-info default-spacer">
                         </form>
-                        {% endif %}
-                        {% endif %}
+                        <% } %>
+                        <% } %>
                         <div id="description">
                             <b>Description</b><br>
                             <div id="description-content" style="word-wrap: break-word;">
-                                {% if description %}
-                                {{ description }}
-                                {% endif %}
+                                <% if (description) { %>
+                                <%= description %>
+                                <% } %>
                             </div>
-                            {% if current_user.id == username %}
+                            <% if (logged_username == username) { %>
                             <button class="btn-xs btn-link" onclick="changeEditableDescription()" id="edit-button"
                                     style="margin-top:10px">Edit
                             </button>
-                            {% endif %}
+                            <% } %>
                         </div>
                     </div>
                 </div>
                 <div class="container-fluid" id="posts-area">
                     <h1 class="display-4 big-heading">Posts</h1>
-                    {% if current_user.is_authenticated and current_user.id == username %}
+                    <% if (logged_username == username) { %>
                     <button onclick="display_post_box()" class="btn-lg btn-info">New Post</button>
                     <div id="post-register" style="display: none">
                         <form action="/create_post" method="POST">
                             <input type="text" name="content" class="form-control">
                             <input type="submit" name="Post" class="btn btn-success">
-                            <input type="hidden" name="username" value="{{ username }}">
+                            <input type="hidden" name="username" value="<%= username %>">
                         </form>
                     </div>
-                    {% endif %}
-                    {% for post in posts %}
+                    <% } %>
+                    <% for (let i = 0; i < posts.length; ++i) { %>
+                    <% let post = posts[i] %>
                     <div class="post-div container">
                         <div class="post-content-div">
-                            <div class="post-content">{{ post.content }}</div>
-                            <div class="post-time"><b>{{ post.date_added }} {{ post.time_added }}</b></div>
+                            <div class="post-content"><%= post.content %></div>
+                            <div class="post-time"><b><%= post.date_added %> <%= post.time_added %></b></div>
                         </div>
-                        {% for comment in post.comments %}
+                        <% for (let j = 0; j < post.comments.length; ++j) { %>
+                        <% let comment = post.comments[j] %>
                         <div class="comment-div row">
-                            <div class="comment-content col-lg-8">{{ comment.content }}</div>
+                            <div class="comment-content col-lg-8"><%= comment.content %></div>
                             <div class="post-time">
-                                <a href="/users/{{comment.username }}">
-                                    <img src="{{ comment.user_profile_photo }}"
+                                <a href="/users/<%=comment.username %>">
+                                    <img src="<%= comment.user_profile_photo %>"
                                          style="width:30px;height:30px;display:inline">
                                 </a>
-                                {{ comment.user }}<br>
-                                <b>{{ comment.date_added }} {{ comment.time_added }}</b>
+                                <%= comment.user %><br>
+                                <b><%= comment.date_added %> <%= comment.time_added %></b>
                             </div>
                         </div>
-                        {% endfor %}
-                        {% if current_user.is_authenticated %}
-                        <button class="btn-sm btn-info" onclick="display_comment_box({{ post.id }})">
+                        <% } %>
+                        <button class="btn-sm btn-info" onclick="display_comment_box(<%= post.id %>)">
                             New Comment
                         </button>
-                        <div class="comment-register" id="comment_post_id_{{ post.id }}" style="display: none">
+                        <div class="comment-register" id="comment_post_id_<%= post.id %>" style="display: none">
                             <form action="/create_comment" method="POST">
                                 <input type="text" name="content" class="form-control">
                                 <input type="submit" value="Post" class="btn-sm btn-info">
-                                <input type="hidden" name="post_id" value="{{ post.id }}">
+                                <input type="hidden" name="post_id" value="<%= post.id %>">
                             </form>
                         </div>
-                        {% endif %}
                     </div>
-                    {% endfor %}
+                    <% } %>
                 </div>
             </div>
             <div id="full-side-view" class="col-lg-5 row">
                 <div class="col-lg-6 half-side-view">
                     <div class="side-area">
                         <h2 class="small-heading">My Friends</h2>
-                        {% for friend in my_friends %}
+                        <% for (let i = 0; i < my_friends.length; ++i) { %>
+                        <% let friend = my_friends[i] %>
                         <div class="friend-request row justify-content-center">
                             <div class="friend-request-top row">
                                 <div style="display:inline;" class="col-lg-3">
-                                    <a href="/users/{{ friend.username }}">
-                                        <img src="{{ friend.profile_photo_path }}" style="width:40px;height:40px;">
+                                    <a href="/users/<%= friend.username %>">
+                                        <img src="<%= friend.profile_photo_path %>" style="width:40px;height:40px;">
                                     </a>
                                 </div>
                                 <div style="display:inline; white-space:nowrap;" class="col-lg-5">
-                                    <b>{{ friend.first_name }} {{ friend.last_name }}</b>
+                                    <b><%= friend.first_name %> <%= friend.last_name %></b>
                                 </div>
                                 <div class="col-lg-3">
                                     <form action="/remove_user_friend" method="post">
                                         <input type="submit" value="X" class="btn-sm btn-danger"
                                                style="margin-top: 10px;">
-                                        <input type="hidden" name="friend_id" value="{{ friend.id }}">
+                                        <input type="hidden" name="friend_id" value="<%= friend.id %>">
                                     </form>
                                 </div>
                             </div>
                         </div>
-                        {% endfor %}
+                        <% } %>
                     </div>
-                    {% if friend_requests %}
+                    <% if (friend_requests) { %>
                     <div class="side-area" style="margin-top: 10px;">
                         <h2 class="small-heading">Friend Requests</h2>
-                        {% for request in friend_requests %}
+                        <% for (let i = 0; i < friend_requests.length; ++i) { %>
+                        <% let request = friend_requests[i] %>
                         <div class="friend-request row justify-content-center">
                             <div class="friend-request-top">
                                 <div style="display:inline;">
-                                    <a href="/users/{{ request.username }}">
-                                        <img src="{{ request.profile_photo_path }}" style="width:40px;height:40;">
+                                    <a href="/users/<%= request.username %>">
+                                        <img src="<%= request.profile_photo_path %>" style="width:40px;height:40;">
                                     </a>
                                 </div>
                                 <div style="display:inline; white-space:nowrap;">
-                                    <b>{{ request.first_name }} {{ request.last_name }}</b>
+                                    <b><%= request.first_name %> <%= request.last_name %></b>
                                 </div>
                             </div>
                             <form action="/resolve_friend_request" method="post">
-                                <input name="user_id" value="{{ request.id }}" type="hidden">
+                                <input name="user_id" value="<%= request.id %>" type="hidden">
                                 <div class="row" style="margin-top: 10px">
                                     <input type="submit" name="accept" value="Accept"
                                            class="request-button btn btn-info default-spacer">
@@ -205,49 +197,51 @@
                                 </div>
                             </form>
                         </div>
-                        {% endfor %}
+                        <% } %>
                     </div>
-                    {% endif %}
+                    <% } %>
                 </div>
                 <div class="col-lg-6 half-side-view">
                     <div class="side-area">
                         <h2 class="small-heading">My Groups</h2>
-                        {% for group in my_groups %}
+                        <% for (let i = 0; i < my_groups.length; ++i) { %>
+                        <% let group = my_groups[i] %>
                         <div class="friend-request row justify-content-center">
                             <div class="friend-request-top">
-                                <a href="/groups/{{ group.name }}">
+                                <a href="/groups/<%= group.name %>">
                                     <div style="display:inline; white-space:nowrap;">
-                                        <b>{{ group.name }}</b>
+                                        <b><%= group.name %></b>
                                     </div>
                                 </a>
                             </div>
                         </div>
-                        {% endfor %}
+                        <% } %>
                         <div id="new-group-div" style="margin-left: 30px;margin-bottom: 10px;">
-                            <button class="btn btn-success" onclick="onCreateGroup('{{ current_user.id }}')"
+                            <button class="btn btn-success" onclick="onCreateGroup('<%= logged_username %>')"
                                     id="create-group-button">Create group
                             </button>
                         </div>
                     </div>
-                    {% if group_invitations %}
+                    <% if (group_invitations) { %>
                     <div class="side-area" style="margin-top: 10px;">
                         <h2 class="small-heading">Group Invitations</h2>
-                        {% for invitation in group_invitations %}
+                        <% for (let i = 0; i < group_invitations.length; ++i) { %>
+                        <% let invitation = group_invitations[i] %>
                         <div class="friend-request row justify-content-center">
                             <div class="friend-request-top">
                                 <div style="display:inline;">
-                                    <a href="/users/{{ invitation.username }}">
-                                        <img src="{{ invitation.profile_photo_path }}" style="width:40px;height:40;">
+                                    <a href="/users/<%= invitation.username %>">
+                                        <img src="<%= invitation.profile_photo_path %>" style="width:40px;height:40;">
                                     </a>
                                 </div>
                                 <div style="display:inline; white-space:nowrap;">
-                                    <b>{{ invitation.first_name }} {{ invitation.last_name }}</b>
+                                    <b><%= invitation.first_name %> <%= invitation.last_name %></b>
                                 </div>
                             </div>
-                            <b>{{ invitation.group_name }}</b>
+                            <b><%= invitation.group_name %></b>
                             <form action="/resolve_group_invitation" method="post">
-                                <input name="host_id" value="{{ invitation.host_id }}" type="hidden">
-                                <input name="group_id" value="{{ invitation.group_id }}" type="hidden">
+                                <input name="host_id" value="<%= invitation.host_id %>" type="hidden">
+                                <input name="group_id" value="<%= invitation.group_id %>" type="hidden">
                                 <div class="row" style="margin-top: 10px">
                                     <input type="submit" name="accept" value="Accept"
                                            class="request-button btn btn-info default-spacer">
@@ -256,9 +250,9 @@
                                 </div>
                             </form>
                         </div>
-                        {% endfor %}
+                        <% } %>
                     </div>
-                    {% endif %}
+                    <% } %>
                 </div>
             </div>
         </div>
