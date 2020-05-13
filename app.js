@@ -115,6 +115,12 @@ async function getUserFriendRequests(client, current_id) {
         [current_id]
     )
 
+    for (let friend of result.rows) {
+        if (!friend.profile_photo_path) {
+            friend.profile_photo_path = '/static/images/anonim.jpg';
+        }
+    }
+
     return result.rows
 }
 
@@ -161,6 +167,15 @@ async function getUserFriends(client, current_id) {
         [current_id]
     )
 
+    for (let friend of result.rows) {
+        if (!friend.profile_photo_path) {
+            friend.profile_photo_path = '/static/images/anonim.jpg';
+        }
+    }
+
+    console.log('Friends:');
+    console.log(result.rows);
+
     return result.rows
 }
 
@@ -198,13 +213,15 @@ app.get('/users/:username', async (req, res) => {
         return;
     }
 
+    const username = req.params.username
+
     const client = new Client(connParams);
 
     await client.connect();
 
     const result = await client.query(
-        'SELECT id, first_name, last_name, birth_date, profile_photo_path FROM "user" WHERE username=$1::text',
-        [req.params.username]);
+        `SELECT id, first_name, last_name, birth_date, profile_photo_path FROM "user" 
+        WHERE username=$1::text`, [username]);
 
     const user_data = result.rows[0];
 
@@ -320,10 +337,13 @@ app.get('/users/:username', async (req, res) => {
 
     await client.end();
 
+    console.log(is_friend);
+    console.log(user_data);
+
     res.render('user_profile', {
         logged_username: logged_username,
         user_id: user_data.id,
-        username: user_data.username,
+        username: username,
         first_name: user_data.first_name,
         last_name: user_data.last_name,
         profile_photo_path: user_data.profile_photo_path,
@@ -336,6 +356,150 @@ app.get('/users/:username', async (req, res) => {
         is_friend: is_friend,
         group_invitations: groupInvitations
     });
+});
+
+
+app.post('/add_friend', async (req, res) => {
+    const logged_username = req.session.user
+    if (!logged_username) {
+        res.redirect('/login.html');
+        return;
+    }
+
+    const username = req.body.username;
+
+    const client = new Client(connParams);
+
+    await client.connect();
+
+    const res1 = await client.query('SELECT id FROM "user" WHERE username=$1', [logged_username]);
+    const logged_id = res1.rows[0].id;
+
+    console.log(username);
+    const res2 = await client.query('SELECT id FROM "user" WHERE username=$1', [username]);
+
+    const user_id = res2.rows[0].id;
+
+    const friend_res = await client.query(`SELECT * FROM user_friend WHERE 
+                                          (user1_id=$1 AND user2_id=$2) OR 
+                                          (user1_id=$2 AND user2_id=$1)`,
+                                          [user_id, logged_id]);
+    if (!friend_res.rowCount != 0) {
+        await client.end();
+        res.redirect(`/users/${logged_username}`);
+        return;
+    }
+
+    const request_res = await client.query(`SELECT * FROM user_friend_request WHERE
+                                            (user_id=$1 AND friend_id=$2) OR
+                                            (user_id=$2 AND friend_id=$1)`,
+                                            [user_id, logged_id]);
+    if (request_re.rowCount != 0) {
+        await client.end();
+        res.redirect(`/users/${logged_username}`);
+        return;
+    }
+
+    await client.query('INSERT INTO user_friend_request VALUES($1, $2)', [user_id, logged_id])
+
+    await client.end();
+
+    res.redirect(`/users/${username}`);
+});
+
+
+app.post('/resolve_friend_request', async (req, res) => {
+    logged_username = req.session.user;
+    user_id = parseInt(req.body.user_id);
+
+    const client = new Client(connParams);
+
+    await client.connect();
+
+    let id_res = await client.query('SELECT id FROM "user" WHERE username=$1',
+                                    [logged_username]);
+    const logged_id = id_res.rows[0].id;
+
+    await client.query('DELETE FROM user_friend_request WHERE friend_id=$1 AND user_id=$2',
+                       [logged_id, user_id])
+
+    if (req.body.accept) {
+        await client.query('INSERT INTO user_friend VALUES($1, $2)', [logged_id, user_id]);
+    }
+
+    await client.end();
+
+    res.redirect(`/users/${logged_username}`);
+});
+
+
+app.post('/resolve_group_invitation', async (req, res) => {
+    const logged_username = req.session.user
+    if (!logged_username) {
+        res.redirect('/login.html');
+        return;
+    }
+
+    const host_id = parseInt(req.body.host_id);
+    const group_id = parseInt(req.body.group_id);
+
+    const client = new Client(connParams);
+
+    await client.connect();
+
+    let id_res = await client.query('SELECT id FROM "user" WHERE username=$1',
+                                    [logged_username]);
+    const guest_id = id_res.rows[0].id;
+
+    const role_res = await client.query(`SELECT role FROM group_invitation WHERE 
+                                         host_id=$1 AND guest_id=$2 AND group_id=$3`,
+                                        [host_id, guest_id, group_id]);
+    if (role_res.rowCount == 0) {
+        await client.end();
+        res.redirect(`/users/${logged_username}`);
+        return;
+    }
+
+    const role = role_res.rows[0].role;
+
+    await client.query(`DELETE FROM group_invitation WHERE 
+                        host_id=$1 AND guest_id=$2 AND group_id=$3`,
+                       [host_id, guest_id, group_id]);
+
+    if (req.body.accept) {
+        await client.query('INSERT INTO user_group VALUES($1, $2, $3)',
+                           [guest_id, group_id, role]);
+    }
+
+    await client.end();
+
+    res.redirect(`/users/${logged_username}`);
+});
+
+
+app.post('/remove_user_friend', async (req, res) => {
+    const logged_username = req.session.user;
+    if (!logged_username) {
+        res.redirect('/login.html');
+        return;
+    }
+
+    friend_id = parseInt(req.body.friend_id);
+
+    const client = new Client(connParams);
+
+    await client.connect();
+
+    const id_res = await client.query('SELECT id FROM "user" WHERE username=$1',
+                                      [logged_username]);
+    const logged_id = id_res.rows[0].id;
+
+    await client.query(`DELETE FROM "user_friend" WHERE 
+                        (user1_id=$1 AND user2_id=$2) OR 
+                        (user1_id=$2 AND user2_id=$1)`,
+                       [logged_id, friend_id]);
+
+    return res.redirect(`/users/${logged_username}`);
 });
 
 

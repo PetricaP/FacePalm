@@ -61,21 +61,21 @@
                             <input id="files" type="file" style="display:none;" name="new_profile_photo">
                             <input class="btn-sm btn-success" type="submit" value="Change">
                         </form>
-                        {% else %}
+                        <% } else { %>
                         <% if (is_friend < 3) { %>
                         <form action="/add_friend" method="post">
                             <% if (is_friend == 1) { %>
                             <input value="Friend" class="btn btn-primary" disabled>
-                            {% else %}
+                            <% } else { %>
                             <% if (is_friend == 0) { %>
                             <input type="hidden" name="username" value="<%= username %>">
                             <input type="submit" class="btn btn-primary" value="Add friend">
-                            {% else %}
+                            <% } else { %>
                             <input value="Request Sent" class="btn btn-primary" disabled>
                             <% } %>
                             <% } %>
                         </form>
-                        {% else %}
+                        <% } else { %>
                         <form action="/resolve_friend_request" method="post">
                             <input name="user_id" value="<%= user_id %>" type="hidden">
                             <input type="submit" name="accept" value="Accept" class="btn btn-info default-spacer">
