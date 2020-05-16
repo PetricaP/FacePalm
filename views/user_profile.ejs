@@ -238,7 +238,7 @@
                                     <b><%= invitation.first_name %> <%= invitation.last_name %></b>
                                 </div>
                             </div>
-                            <b><%= invitation.group_name %></b>
+                            <b><%= invitation.name %></b>
                             <form action="/resolve_group_invitation" method="post">
                                 <input name="host_id" value="<%= invitation.host_id %>" type="hidden">
                                 <input name="group_id" value="<%= invitation.group_id %>" type="hidden">
@@ -258,7 +258,7 @@
         </div>
     </div>
 </div>
-<script src="/static/user_profile.js"></script>
+<script src="/user_profile.js"></script>
 
 <!-- Optional JavaScript -->
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->

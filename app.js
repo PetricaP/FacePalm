@@ -31,7 +31,7 @@ const connParams = {
 };
 
 
-const port = 9090
+const port = 9090;
 
 
 app.post('/login', async (req, res) => {
@@ -43,8 +43,6 @@ app.post('/login', async (req, res) => {
     const password_hash =
         crypto.createHash('sha256').update(password).digest('hex');
 
-    console.log(`${username} ${password} ${password_hash}`);
-
     await client.connect();
 
     const result = await client.query(
@@ -53,10 +51,7 @@ app.post('/login', async (req, res) => {
 
     await client.end();
 
-    if (result.rowCount == 0) {
-        console.log(`User ${username} not found in DB`);
-    } else {
-        console.log(`User ${username} found in DB`);
+    if (result.rowCount != 0) {
         if (password_hash == result.rows[0].password_hash) {
             req.session.user = username;
             res.redirect(`/users/${username}`);
@@ -173,9 +168,6 @@ async function getUserFriends(client, current_id) {
         }
     }
 
-    console.log('Friends:');
-    console.log(result.rows);
-
     return result.rows
 }
 
@@ -225,7 +217,6 @@ app.get('/users/:username', async (req, res) => {
 
     const user_data = result.rows[0];
 
-    console.log(user_data);
     const desc_result = await client.query(
         'SELECT content FROM user_description WHERE user_id=$1',
         [req.params.id]);
@@ -238,7 +229,6 @@ app.get('/users/:username', async (req, res) => {
     const logged_res = await client.query(
         'SELECT id FROM "user" WHERE username=$1::text', [logged_username]);
 
-    console.log(logged_username);
     const logged_id = logged_res.rows[0].id;
 
     if (!user_data.profile_photo_path) {
@@ -252,8 +242,6 @@ app.get('/users/:username', async (req, res) => {
     const friends = await getUserFriends(client, logged_id);
 
     const groupInvitations = await getUserGroupInvitations(client, logged_id);
-
-    console.log(groups);
 
     const formattedDate = formatDate(user_data.birth_date);
 
@@ -283,7 +271,7 @@ app.get('/users/:username', async (req, res) => {
 
     const posts_res = await client.query('SELECT id, content, date_added, time_added FROM user_post WHERE user_id=$1', [user_data.id])
 
-    posts = []
+    let posts = []
     for (let entry of posts_res.rows) {
         const comment_res = await client.query(
             `SELECT 
@@ -300,11 +288,10 @@ app.get('/users/:username', async (req, res) => {
               time_added ASC`,
             [entry.id])
 
-        comments = []
+        let comments = []
         for (comment_row of comment_res.rows) {
             const user_res = await client.query('SELECT username, first_name, last_name, profile_photo_path FROM "user" WHERE id=$1',
-                           [comment_row.user_id]);
-
+                                                [comment_row.user_id]);
             const comm_user = user_res.rows[0];
 
             formatted_comment_date = formatDate(comment_row.date_added);
@@ -316,29 +303,23 @@ app.get('/users/:username', async (req, res) => {
                 time_added: formatted_comment_time,
                 username: comm_user.username,
                 user: `${comm_user.first_name} ${comm_user.last_name}`,
-                user_profile_photo: (comm_user.profile_photo) ? comm_user.profile_photo
-                                                              : '/static/images/anonim.jpg'
-            });
-
-            formatted_post_date = formatDate(entry.date_added);
-            formatted_post_time = formatTime(entry.time_added);
-
-            posts.push({
-                id: entry.id,
-                content: entry.content,
-                date_added: formatted_post_date,
-                time_added: formatted_post_time,
-                comments: comments
+                user_profile_photo: comm_user.profile_photo_path || '/static/images/anonim.jpg'
             });
         }
+
+        formatted_post_date = formatDate(entry.date_added);
+        formatted_post_time = formatTime(entry.time_added);
+
+        posts.push({
+            id: entry.id,
+            content: entry.content,
+            date_added: formatted_post_date,
+            time_added: formatted_post_time,
+            comments: comments
+        });
     }
 
-    console.log(posts);
-
     await client.end();
-
-    console.log(is_friend);
-    console.log(user_data);
 
     res.render('user_profile', {
         logged_username: logged_username,
@@ -375,7 +356,6 @@ app.post('/add_friend', async (req, res) => {
     const res1 = await client.query('SELECT id FROM "user" WHERE username=$1', [logged_username]);
     const logged_id = res1.rows[0].id;
 
-    console.log(username);
     const res2 = await client.query('SELECT id FROM "user" WHERE username=$1', [username]);
 
     const user_id = res2.rows[0].id;
@@ -384,7 +364,7 @@ app.post('/add_friend', async (req, res) => {
                                           (user1_id=$1 AND user2_id=$2) OR 
                                           (user1_id=$2 AND user2_id=$1)`,
                                           [user_id, logged_id]);
-    if (!friend_res.rowCount != 0) {
+    if (friend_res.rowCount != 0) {
         await client.end();
         res.redirect(`/users/${logged_username}`);
         return;
@@ -394,7 +374,7 @@ app.post('/add_friend', async (req, res) => {
                                             (user_id=$1 AND friend_id=$2) OR
                                             (user_id=$2 AND friend_id=$1)`,
                                             [user_id, logged_id]);
-    if (request_re.rowCount != 0) {
+    if (request_res.rowCount != 0) {
         await client.end();
         res.redirect(`/users/${logged_username}`);
         return;
@@ -500,6 +480,365 @@ app.post('/remove_user_friend', async (req, res) => {
                        [logged_id, friend_id]);
 
     return res.redirect(`/users/${logged_username}`);
+});
+
+
+app.post('/create_comment', async (req, res) => {
+    if (!req.session.user) {
+        res.redirect('/login.html');
+        return;
+    }
+
+    let content = req.body.content;
+    const post_id = req.body.post_id;
+    const loc = req.body.location || '';
+
+    const backURL = req.header('Referer') || '/';
+
+    if (!content) {
+        res.redirect(backURL);
+
+        return;
+    }
+
+    content = content.trim();
+
+    const client = new Client(connParams);
+
+    await client.connect();
+
+    const id_res = await client.query('SELECT id FROM "user" WHERE username=$1',
+                                      [req.session.user]);
+    const user_id = id_res.rows[0].id;
+
+    if (loc == 'group') {
+        await client.query(`INSERT INTO 
+                              group_post_comment (post_id, user_id, content) 
+                            VALUES ($1, $2, $3)`,
+                           [post_id, user_id, content]);
+    } else {
+        await client.query(`INSERT INTO 
+                              user_post_comment (post_id, user_id, content) 
+                            VALUES ($1, $2, $3)`,
+                           [post_id, user_id, content]);
+    }
+
+    await client.end();
+
+    res.redirect(backURL);
+});
+
+
+app.get('/search', async (req, res) => {
+    if (!req.session.user) {
+        res.redirect('/login.html');
+        return;
+    }
+
+    const value = req.query.query;
+    const attribute = req.query.attribute;
+
+    const backURL = req.header('Referer') || '/';
+    if (!['username', 'first_name', 'last_name', 'email'].includes(attribute)) {
+        res.redirect(backURL);
+        return;
+    }
+
+    let client = new Client(connParams);
+
+    await client.connect();
+
+    const entries = await client.query(
+        `SELECT 
+          username, 
+          first_name, 
+          last_name, 
+          email, 
+          profile_photo_path 
+        FROM 
+          "user" 
+        WHERE 
+        LOWER(${attribute}) LIKE $1`,
+        ['%' + value.toLowerCase() + '%']);
+
+    if (entries.rowCount == 0) {
+        res.redirect(backURL);
+        return;
+    }
+
+    for (let result of entries.rows) {
+        if (!result.profile_photo_path) {
+            result.profile_photo_path = '/statis/images/anonim.jpg';
+        }
+    }
+
+    res.render('search', {logged_username: req.session.user, results: entries.rows});
+});
+
+
+app.get('/groups/:group_name', async (req, res) => {
+    const logged_username = req.session.user;
+    if (!logged_username) {
+        res.redirect('/login.html');
+        return;
+    }
+
+    const group_name = req.params.group_name;
+
+    let client = new Client(connParams);
+
+    await client.connect();
+
+    let result = await client.query('SELECT * FROM "group" WHERE name=$1', [group_name]);
+    if (result.rowCount == 0) {
+        res.redirect(`/users/${req.session.user}`);
+        return;
+    }
+
+    const group = result.rows[0];
+
+    result = await client.query('SELECT id FROM "user" WHERE username=$1', [logged_username]);
+    const user_id = result.rows[0].id;
+
+    let user_role = 'ADMIN';
+    if (logged_username != 'admin') {
+        result = await client.query('SELECT role FROM user_group WHERE user_id = $1 AND group_id = $2',
+                                    [user_id, group.id]);
+        if (result.rowCount == 0) {
+            res.redirect(`/users/${logged_username}`);
+            return;
+        }
+
+        user_role = result.rows[0].role
+    }
+
+    result = await client.query(
+      `SELECT 
+         p.id, 
+         content, 
+         user_id, 
+         p.date_added, 
+         p.time_added, 
+         username, 
+         first_name, 
+         last_name, 
+         profile_photo_path 
+       FROM 
+         group_post p, 
+         "user" u 
+       WHERE 
+         group_id=$1 
+         AND u.id = p.user_id`,
+       [group.id]);
+
+    let posts = [];
+    for (const entry of result.rows) {
+        const post = {
+            id: entry.id,
+            content: entry.content,
+            user_id: entry.user_id,
+            user_first_name: entry.first_name,
+            user_last_name: entry.last_name,
+            user_profile_photo: entry.profile_photo_path || '/static/images/anonim.jpg',
+            date_added: formatDate(entry.date_added),
+            time_added: formatTime(entry.time_added)
+        };
+
+        const res = await client.query(
+            `SELECT 
+              first_name, 
+              last_name, 
+              profile_photo_path, 
+              content, 
+              date_added, 
+              time_added 
+            FROM 
+              group_post_comment c, 
+              "user" u 
+            WHERE 
+              post_id=$1 
+              AND c.user_id = u.id`,
+            [entry.id]);
+
+        let comments = [];
+        for (const comment of res.rows) {
+            comments.push({
+                'content': comment.content,
+                'date_added': formatDate(comment.date_added),
+                'time_added': formatTime(comment.time_added),
+                'user': comment.first_name + ' ' + comment.last_name,
+                'user_profile_photo': comment.profile_photo_path || '/static/images/anonim.jpg'
+            });
+        }
+
+        post.comments = comments;
+
+        posts.push(post);
+    }
+
+    result = await client.query(
+        `SELECT 
+          username, 
+          first_name, 
+          last_name, 
+          profile_photo_path, 
+          role 
+        FROM 
+          "user" u, 
+          user_group ug 
+        WHERE 
+          u.id = ug.user_id 
+          AND group_id=$1`,
+        [group.id]);
+
+    let members = [];
+    for (const member of result.rows) {
+        members.push({
+            username: member.username,
+            first_name: member.first_name,
+            last_name: member.last_name,
+            profile_photo_path: member.profile_photo_path || '/static/images/anonim.jpg',
+            role: member.role
+        });
+    }
+
+    await client.end();
+
+    group.date_added = formatDate(group.date_added);
+
+    res.render('group', {
+        logged_username: logged_username,
+        group: group,
+        posts: posts,
+        members: members,
+        user_role: user_role
+    });
+});
+
+
+app.post('/remove_group_user', async (req, res) => {
+    const username = req.body.username;
+    const group_id = parseInt(req.body.group_id);
+
+    let client = new Client(connParams);
+
+    await client.connect();
+
+    const backURL = req.header('Referer') || '/';
+
+    let result = await client.query('SELECT id FROM "user" WHERE username=$1', [username]);
+    if (result.rowCount == 0) {
+        res.redirect(backURL);
+        return;
+    }
+
+    const user_id = result.rows[0].id;
+
+    await client.query('DELETE FROM "user_group" WHERE user_id=$1 AND group_id=$2', [user_id, group_id]);
+
+    await client.end();
+
+    res.redirect(backURL);
+});
+
+
+app.get('/logout', (req, res) => {
+    delete req.session.user;
+
+    res.redirect('/');
+});
+
+
+app.get('/add_group_user', async (req, res) => {
+    const logged_username = req.session.user;
+    if (!logged_username) {
+        res.redirect('/login.html');
+        return;
+    }
+
+    const group_id = parseInt(req.query.group_id);
+    const user_role = req.query.user_role;
+    const group_name = req.query.group_name;
+
+    let client = new Client(connParams);
+
+    await client.connect();
+
+    let result = await client.query('SELECT id FROM "user" WHERE username=$1', [logged_username]);
+    const user_id = result.rows[0].id;
+
+    result = await client.query(
+        `SELECT f.id, 
+               f.first_name, 
+               f.last_name, 
+               f.profile_photo_path 
+        FROM "user" u, 
+             "user" f, 
+             user_friend uf 
+        WHERE ((u.id = uf.user1_id 
+                AND f.id = uf.user2_id) 
+               OR (u.id = uf.user2_id 
+                   AND f.id = uf.user1_id)) 
+          AND u.id = $1 
+          AND f.id NOT IN 
+            (SELECT user_id 
+             FROM user_group 
+             WHERE group_id = $2) 
+          AND f.id NOT IN 
+            (SELECT guest_id 
+             FROM group_invitation 
+             WHERE group_id = $2 
+               AND host_id = $1)`,
+        [user_id, group_id]);
+
+    for (let entry of result.rows) {
+        if (!entry.profile_photo_path) {
+            entry.profile_photo_path = '/static/images/anonim.jpg';
+        }
+    }
+
+    await client.end();
+
+    res.render('add_group_user', {
+        group_id: group_id,
+        user_role: user_role,
+        group_name: group_name,
+        friends: result.rows
+    });
+});
+
+
+app.post('/add_group_user', async (req, res) => {
+    const logged_username = req.session.user;
+    if (!logged_username) {
+        res.redirect('/login.html');
+        return;
+    }
+
+    const group_id = parseInt(req.body.group_id);
+    const guest_id = parseInt(req.body.guest_id);
+    const group_name = req.body.group_name;
+    const role = req.body.role;
+
+    let client = new Client(connParams);
+
+    await client.connect();
+
+    let result = await client.query('SELECT id FROM "user" WHERE username=$1', [logged_username]);
+    user_id = result.rows[0].id;
+
+    await client.query(`INSERT INTO 
+                          group_invitation(
+                            guest_id, 
+                            host_id, 
+                            group_id, 
+                            role
+                         ) VALUES($1, $2, $3, $4)`,
+                       [guest_id, user_id, group_id, role]);
+
+    await client.end();
+
+    res.redirect(`/groups/${group_name}`);
 });
 
 

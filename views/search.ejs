@@ -29,20 +29,8 @@
 </head>
 <body>
 <div class="container">
-    {% with messages = get_flashed_messages() %}
-    {% if messages %}
-    <div class="container" id="error-container">
-        {% for message in messages %}
-        <div class="error-message">{{ message }}</div>
-        {% endfor %}
-    </div>
-    {% endif %}
-    {% endwith %}
-
     <nav class="navbar navbar-default" id="my-navbar">
-        {% if current_user.id != username %}
-        <a href="/users/{{ current_user.id }}" class="btn btn-info" role="button">Home</a>
-        {% endif %}
+        <a href="/users/<%= logged_username %>" class="btn btn-info" role="button">Home</a>
         <div class="md-form mt-0">
             <form class="form-inline" action="/search" method="get">
                 <div class="form-group mb-2">
@@ -65,20 +53,21 @@
             <input type="submit" class="btn btn-danger" value="Log Out"/>
         </form>
     </nav>
-    {% for user in results %}
+    <% for (let i = 0; i < results.length; ++i) { %>
+    <% let user = results[i] %>
     <div class="row result-entry">
         <div class="col-lg-2">
-            <a href="/users/{{ user.username }}">
-                <img src="{{ user.profile_photo_path }}" style="width:100px;height:100;display:inline">
+            <a href="/users/<%= user.username %>">
+                <img src="<%= user.profile_photo_path %>" style="width:100px;height:100;display:inline">
             </a>
         </div>
         <div class="col-lg-2">
-            <h1 class="display-4 user-text">{{ user.username }}</h1>
-            {{ user.first_name }} {{ user.last_name }}<br>
-            <em>{{ user.email }}</em>
+            <h1 class="display-4 user-text"><%= user.username %></h1>
+            <%= user.first_name %> <%= user.last_name %><br>
+            <em><%= user.email %></em>
         </div>
     </div>
-    {% endfor %}
+    <% } %>
 </div>
 <br>
 </body>

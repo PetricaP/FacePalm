@@ -7,30 +7,17 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
           integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-    <link rel="stylesheet" href="/static/flash_error.css">
-    <link rel="stylesheet" href="/static/posts.css">
-    <link rel="stylesheet" href="/static/generic.css">
-    <link rel="stylesheet" href="/static/group.css">
+    <link rel="stylesheet" href="/flash_error.css">
+    <link rel="stylesheet" href="/posts.css">
+    <link rel="stylesheet" href="/generic.css">
+    <link rel="stylesheet" href="/group.css">
 
-    <title><%= group_name %></title>
+    <title><%= group.name %></title>
 </head>
 <body>
 <div class="container">
-    {% with messages = get_flashed_messages() %}
-    <% if (messages) { %>
-    <div class="container" id="error-container">
-        <% for (let i = 0; i < messages.length; ++i) { %>
-        <% let message = messages[i] %>
-        <div class="error-message"><%= message %></div>
-        <% } %>
-    </div>
-    <% } %>
-    {% endwith %}
-
     <nav class="navbar navbar-default" id="my-navbar">
-        <% if (current_user.id != username) { %>
-        <a href="/users/<%= current_user.id %>" class="btn btn-info" role="button">Home</a>
-        <% } %>
+        <a href="/users/<%= logged_username %>" class="btn btn-info" role="button">Home</a>
         <div class="md-form mt-0">
             <form class="form-inline" action="/search" method="get">
                 <div class="form-group mb-2">
@@ -59,13 +46,13 @@
     <div class="row">
         <div class="col-lg-9" id="posts-area">
             <h1 class="display-4 big-heading">Posts</h1>
-            <% if (user_role in ['ADMIN', 'WRITER']) { %>
+            <% if (['ADMIN', 'WRITER'].includes(user_role)) { %>
             <button onclick="display_post_box()" class="btn-lg btn-info">New Post</button>
             <div id="post-register" style="display: none">
                 <form action="/create_post" method="POST">
                     <input type="text" name="content" class="form-control">
                     <input type="submit" name="Post" class="btn btn-success">
-                    <input type="hidden" name="username" value="<%= current_user.id %>">
+                    <input type="hidden" name="username" value="<%= logged_username %>">
                     <input type="hidden" name="group_id" value="<%= group.id %>">
                 </form>
             </div>
@@ -98,7 +85,7 @@
                     </div>
                 </div>
                 <% } %>
-                <% if (user_role in ['ADMIN', 'WRITER']) { %>
+                <% if (['ADMIN', 'WRITER'].includes(user_role)) { %>
                 <button class="btn-sm btn-info" onclick="display_comment_box(<%= post.id %>)">
                     New Comment
                 </button>
@@ -106,7 +93,7 @@
                     <form action="/create_comment" method="POST">
                         <input type="text" name="content" class="form-control">
                         <input type="submit" value="Post" class="btn-sm btn-info">
-                        <input type="hidden" name="username" value="<%= current_user.id %>">
+                        <input type="hidden" name="username" value="<%= logged_username %>">
                         <input type="hidden" name="post_id" value="<%= post.id %>">
                         <input type="hidden" name="location" value="group">
                     </form>
@@ -129,8 +116,8 @@
                     <div class="col-lg-6 member-name">
                         <%= member.first_name %> <%= member.last_name %>
                     </div>
-                    <% if ((user_role == 'ADMIN' and member.role != 'ADMIN') ||
-                           (member.username == current_user.id)) { %>
+                    <% if ((user_role == 'ADMIN' && member.role != 'ADMIN') ||
+                           (member.username == logged_username)) { %>
                     <div class=col-lg-3">
                         <form action="/remove_group_user" method="post">
                             <input type="submit" value="-" class="btn-sm btn-danger" style="margin-top: 10px;">
@@ -157,6 +144,6 @@
 <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
         integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
         crossorigin="anonymous"></script>
-<script src="/static/user_profile.js"></script>
+<script src="/user_profile.js"></script>
 </body>
 </html>
