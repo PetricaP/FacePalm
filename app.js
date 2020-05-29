@@ -58,6 +58,8 @@ app.post('/login', async (req, res) => {
         } else {
             res.redirect('/login.html');
         }
+    } else {
+        res.redirect('/login.html');
     }
 });
 
@@ -218,8 +220,7 @@ app.get('/users/:username', async (req, res) => {
     const user_data = result.rows[0];
 
     const desc_result = await client.query(
-        'SELECT content FROM user_description WHERE user_id=$1',
-        [req.params.id]);
+        'SELECT content FROM user_description WHERE user_id=$1', [user_data.id]);
 
     description = ''
     if (desc_result.rowCount != 0) {
@@ -840,6 +841,44 @@ app.post('/add_group_user', async (req, res) => {
 
     res.redirect(`/groups/${group_name}`);
 });
+
+
+app.post('/update_user', async (req, res) => {
+    if (req.body.new_profile_photo) {
+        // TODO: Not supported yet, unfortunately this is a bit difficult to do in node
+    }
+
+    const backURL = req.header('Referer') || '/';
+    if (req.body.description) {
+        const description = req.body.description;
+
+        if (description.length > 100) {
+            res.redirect(backURL);
+            return;
+        }
+
+        let client = new Client(connParams);
+
+        await client.connect();
+
+        let result = await client.query('SELECT id FROM "user" WHERE username=$1', [req.session.user]);
+        user_id = result.rows[0].id;
+
+        result = await client.query('SELECT * FROM user_description WHERE user_id=$1', [user_id]);
+
+        if (result.rowCount > 0) {
+            await client.query('UPDATE user_description SET content=$1 WHERE user_id=$2',
+                               [description, user_id]);
+        } else {
+            await client.query('INSERT INTO user_description VALUES($1, $2)', [user_id, description]);
+        }
+
+        await client.end();
+    }
+
+    res.redirect(backURL);
+});
+
 
 
 app.listen(
