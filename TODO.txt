@@ -1,8 +1,0 @@
-1. Inregistrarea utilizator.
-2. Autentificare utilizator pe propria pagina.
-3. Adaugare poze, setare poza de profil.
-4. Editare informatii despre utilizator.
-5. Sistem de permisiuni pentru datele unui utilizator. (asemanator Linux)
-6. Posibilitatea vizitarii altor pagini. (view diferit fata de pagina personala)
-7. Posibilitatea de a scrie mesaje unui alt utilizator, posibilitatea de a vedea mesajele scrise.
-8. Posibilitatea de a scrie postari, posibilitatea altor utilizatori de a comenta postarile (maybe reacts).
